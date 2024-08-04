@@ -16,22 +16,6 @@ namespace GeoTile
         Unknown,
     }
 
-    public class LatLngAlt
-    {
-        public double LatRad { get; set; }
-        public double LngRad { get; set; }
-        public double AltitudeMeter { get; set; }
-
-        public LatLngAlt() { }
-
-        public LatLngAlt(double latRad, double lngRad, double altMeters)
-        {
-            LatRad = latRad;
-            LngRad = lngRad;
-            AltitudeMeter = altMeters;
-        }
-    }
-
     public class TileSetNodeComponent : MonoBehaviour
     {
         [field: SerializeField]

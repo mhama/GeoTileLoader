@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /*
- * LatLngAlt から ECEF への変換
+ * LatLngAlt(Geodetic) から ECEF への変換
    https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
    
    ここの計算方法
@@ -12,6 +12,25 @@ using System.Linq;
 
 namespace GeoTile
 {
+    /// <summary>
+    /// 緯度経度高度を表す値クラス
+    /// </summary>
+    public class LatLngAlt
+    {
+        public double LatRad { get; set; }
+        public double LngRad { get; set; }
+        public double AltitudeMeter { get; set; }
+
+        public LatLngAlt() { }
+
+        public LatLngAlt(double latRad, double lngRad, double altMeters)
+        {
+            LatRad = latRad;
+            LngRad = lngRad;
+            AltitudeMeter = altMeters;
+        }
+    }
+    
     /// <summary>
     /// 参考
     /// UniGLTFでGLTF→Unityで座標系変換しているところ

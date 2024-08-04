@@ -72,7 +72,8 @@ namespace GeoTile
                 trans = go.transform;
                 
                 // モデルの傾きが地球全体座標のリアルな傾きになっているため、戻すためにルートGameObjectを傾ける
-                // 中心と指定している点で水平になるようにする（地球を球体と近似しており、正確ではない）
+                // 中心と指定している点で水平になるようにする
+                // ここで利用している緯度はgeodetic latitudeであり、赤道面となす角度そのものであるので、楕円体であることの補正などは必要がない。
                 var rotation = Quaternion.AngleAxis(90, new Vector3(0, 0, 1)) 
                                * Quaternion.AngleAxis((float) - config.CullingInfo.cullingLatDegree, new Vector3(0, 1, 0)) 
                                * Quaternion.AngleAxis((float) - config.CullingInfo.cullingLonDegree, new Vector3(0, 0, 1));
