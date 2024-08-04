@@ -70,8 +70,9 @@ namespace GeoTile
                 hierarchy.ModelCenterEcefCoordinate = new VectorD3(CoordinateUtil.Vector3FromLatLngAlt(centerLatLngAlt));
                 hierarchy.LoaderConfig = config;
                 trans = go.transform;
-
+                
                 // モデルの傾きが地球全体座標のリアルな傾きになっているため、戻すためにルートGameObjectを傾ける
+                // 中心と指定している点で水平になるようにする（地球を球体と近似しており、正確ではない）
                 var rotation = Quaternion.AngleAxis(90, new Vector3(0, 0, 1)) 
                                * Quaternion.AngleAxis((float) - config.CullingInfo.cullingLatDegree, new Vector3(0, 1, 0)) 
                                * Quaternion.AngleAxis((float) - config.CullingInfo.cullingLonDegree, new Vector3(0, 0, 1));
@@ -152,18 +153,6 @@ namespace GeoTile
                     MaxDepth = 100,
                 };
                 var tileSet = JsonConvert.DeserializeObject<TileSet>(data, settings);
-
-                // PLATEAUストリーミング用
-                if (tileSet.properties != null && tileSet.properties._x != null && tileSet.properties._y != null)
-                {
-                    // 緯度経度から傾きを求めて、Unity上で水平になるよう一番上のGameObjectのlocalRotationを補正する。
-                    float longitude = (float)((tileSet.properties._x.minimum + tileSet.properties._x.maximum) / 2);
-                    float latitude = (float)((tileSet.properties._y.minimum + tileSet.properties._y.maximum) / 2);
-                    Debug.Log($"lon, lat : ({longitude}, {latitude})");
-                    parent.localRotation = Quaternion.AngleAxis(90, new Vector3(0, 0, 1))
-                        * Quaternion.AngleAxis(-latitude, new Vector3(0, 1, 0))
-                        * Quaternion.AngleAxis(-longitude, new Vector3(0, 0, 1));
-                }
 
                 var traverser = new TileSetTraverser(tileSet);
                 traverser.Traverse(parent, (node, go) =>
