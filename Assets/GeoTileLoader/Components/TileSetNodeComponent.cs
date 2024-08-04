@@ -83,8 +83,12 @@ namespace GeoTile
             return string.IsNullOrEmpty(fileName) ? null : Path.GetExtension(fileName.ToLower());
         }
 
-        private void Awake()
+        private void PrepareGltfInstantiator()
         {
+            if (gltfInstantiator != null)
+            {
+                return;
+            }
 #if GEOTILE_USE_UNIGLTF
             gltfInstantiator = new GltfInstantiatorWithUniGltf();
 #else
@@ -288,6 +292,7 @@ namespace GeoTile
 
             Debug.Log("OnGLTFReceived: gltfData len: " + gltfData.Length);
 
+            PrepareGltfInstantiator();
             gltfInstantiator.Instantiate(gltfData, center, this);
         }
 
