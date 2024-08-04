@@ -14,11 +14,11 @@ namespace GeoTile
     public class GltfMetadataExtensions
     {
         [SerializeField]
-        public GltfMetadataCesiumTrcExtension CESIUM_RTC;
+        public GltfMetadataCesiumRtcExtension CESIUM_RTC;
     }
 
     [Serializable]
-    public class GltfMetadataCesiumTrcExtension
+    public class GltfMetadataCesiumRtcExtension
     {
         [SerializeField]
         public double[] center;
