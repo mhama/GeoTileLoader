@@ -248,6 +248,7 @@ namespace GeoTile
             var b3dm = new B3DM();
             b3dm.Read(data);
 
+            /* debug output
             // save feature table json
             {
                 var jsonFilePath = "b3dm_feature.json";
@@ -268,6 +269,7 @@ namespace GeoTile
                 File.WriteAllText(jsonFilePath, b3dm.GltfJsonText);
                 Debug.Log($"gltf json written to <{jsonFilePath}>");
             }
+            */
 
             var metadata = JsonConvert.DeserializeObject<GltfMetadata>(b3dm.GltfJsonText);
             double[] center = null;

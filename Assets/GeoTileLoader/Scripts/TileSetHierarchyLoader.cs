@@ -29,6 +29,11 @@ namespace GeoTile
         public string GoogleSessionId { get; set; }
     }
 
+    /// <summary>
+    /// 3DTileのjsonをロード・解釈し、GameObjectのHierarchyを生成する
+    /// 各ノードのGameObjectにはTileSetNodeComponentを生成する
+    /// ルートGameObjectにはTileSetHierarchyコンポーネントを生成する
+    /// </summary>
     public class TileSetHierarchyLoader
     {
         private TileSetHierarchyLoaderConfig config;
@@ -136,9 +141,9 @@ namespace GeoTile
         {
             Debug.Log("OnJsonResult length: " + data.Length);
 
-            var jsonFilePath = "tile.json";
-            File.WriteAllText(jsonFilePath, data);
-            Debug.Log($"json written to <{jsonFilePath}>");
+            //var jsonFilePath = "tile.json";
+            //File.WriteAllText(jsonFilePath, data);
+            //Debug.Log($"json written to <{jsonFilePath}>");
 
             try
             {
@@ -188,7 +193,6 @@ namespace GeoTile
                             component.NodeCenterLatLng = CoordinateUtil.CenterLatLngOfRegion(node.content.boundingVolume.region);
                         }
                     }
-                    //Debug.Log("node BoundingBox type: " + component.BoundingBoxType);
                 });
                 return;
             }

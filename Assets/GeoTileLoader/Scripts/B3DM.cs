@@ -21,10 +21,11 @@ namespace GeoTile
         public uint batchTableBinaryByteLength;
     }
 
-
+    /// <summary>
+    /// B3DMファイルのデコードを行うクラス
+    /// </summary>
     public class B3DM
     {
-
         public ArraySegment<byte> FeatureJsonData { get; private set; }
         public string FeatureJsonText { get; private set; }
 
@@ -89,8 +90,6 @@ namespace GeoTile
 
             ReadGLTF(GltfData);
 
-            //onReceiveGltfData(GltfData.ToArray());
-
             return true;
         }
 
@@ -125,26 +124,4 @@ namespace GeoTile
             return true;
         }
     }
-
-    [Serializable]
-    public class GltfMetadata
-    {
-        [SerializeField]
-        public GltfMetadataExtensions extensions;
-    }
-
-    [Serializable]
-    public class GltfMetadataExtensions
-    {
-        [SerializeField]
-        public GltfMetadataCesiumTrcExtension CESIUM_RTC;
-    }
-
-    [Serializable]
-    public class GltfMetadataCesiumTrcExtension
-    {
-        [SerializeField]
-        public double[] center;
-    }
-
 }
