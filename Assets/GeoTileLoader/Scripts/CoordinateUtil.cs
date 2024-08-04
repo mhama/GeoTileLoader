@@ -4,12 +4,10 @@ using System.Linq;
 
 /*
  * LatLngAlt(Geodetic) から ECEF への変換
-   https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
-   
-   ここの計算方法
-   https://www.oc.nps.edu/oc2902w/coord/llhxyz.htm
+ * 参考:
+ *  https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
+ *  https://www.oc.nps.edu/oc2902w/coord/llhxyz.htm
  */
-
 namespace GeoTile
 {
     /// <summary>
@@ -91,8 +89,6 @@ namespace GeoTile
         {
             double radiusEquatorial = 6378137.0;
             double radiusPolar = 6356752.3142;
-            double latRatio = Math.Abs(latLngAlt.LatRad / (Math.PI * 0.5));
-            //double radiusOnTheLatitude = radiusEquatorial * (1 - latRatio) + radiusPolar * latRatio;
             double e2 = 1 - ((radiusPolar * radiusPolar) / (radiusEquatorial * radiusEquatorial));
 
             double radiusOnTheLatitude = radiusEquatorial / Math.Sqrt(1 - e2 * Math.Pow(Math.Sin(latLngAlt.LatRad), 2));
