@@ -7,11 +7,11 @@ using UnityEngine;
 
 namespace GeoTile
 {
-
-    //[StructLayout(LayoutKind.Sequential, Pack = 1)]
+    /// <summary>
+    /// B3DMのヘッダ情報
+    /// </summary>
     public struct B3DMHeader
     {
-        //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public byte[] magic;
         public uint version;
         public uint byteLength;
@@ -23,20 +23,37 @@ namespace GeoTile
 
     /// <summary>
     /// B3DMファイルのデコードを行うクラス
+    /// B3DMの仕様:
+    /// https://github.com/CesiumGS/3d-tiles/blob/main/specification/TileFormats/Batched3DModel/README.adoc#tileformats-batched3dmodel-batched-3d-model
     /// </summary>
     public class B3DM
     {
-        public ArraySegment<byte> FeatureJsonData { get; private set; }
+        /// <summary>
+        /// 読み取られたfeature部のjson
+        /// </summary>
         public string FeatureJsonText { get; private set; }
 
-        public ArraySegment<byte> BatchJsonData { get; private set; }
+        /// <summary>
+        /// 読み取られたbatch部のjson
+        /// </summary>
         public string BatchJsonText { get; private set; }
 
+        /// <summary>
+        /// 読み取られたGLTFバイナリデータ
+        /// </summary>
         public ArraySegment<byte> GltfData { get; private set; }
 
-        public ArraySegment<byte> GltfJsonData { get; private set; }
+        /// <summary>
+        /// 読み取られたGLTFのJSON部
+        /// </summary>
         public string GltfJsonText { get; private set; }
 
+        /// <summary>
+        /// バイト列から情報を読み取る
+        /// 特にGLTFバイナリデータおよびGLTFのJSONテキストの読み取り
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public bool Read(byte[] data)
         {
             B3DMHeader header = new B3DMHeader();
@@ -57,29 +74,29 @@ namespace GeoTile
                     return false;
                 }
             }
-            int b3dmHeaderSize = 28;
+            const int b3dmHeaderSize = 28;
 
             int featureTableBasePos = b3dmHeaderSize;
-            FeatureJsonData = new ArraySegment<byte>(data, featureTableBasePos, (int)header.featureTableJSONByteLength);
+            var featureJsonData = new ArraySegment<byte>(data, featureTableBasePos, (int)header.featureTableJSONByteLength);
             if (header.featureTableJSONByteLength > 0)
             {
-                FeatureJsonText = Encoding.UTF8.GetString(FeatureJsonData.ToArray());
+                FeatureJsonText = Encoding.UTF8.GetString(featureJsonData.ToArray());
             }
 
             int batchTableBasePos = b3dmHeaderSize + 
                 (int) header.featureTableJSONByteLength + 
                 (int) header.featureTableBinaryByteLength;
-            BatchJsonData = new ArraySegment<byte>(data, batchTableBasePos, (int)header.batchTableJSONByteLength);
+            var batchJsonData = new ArraySegment<byte>(data, batchTableBasePos, (int)header.batchTableJSONByteLength);
             if (header.batchTableJSONByteLength > 0)
             {
-                BatchJsonText = Encoding.UTF8.GetString(BatchJsonData.ToArray());
+                BatchJsonText = Encoding.UTF8.GetString(batchJsonData.ToArray());
             }
 
-            int pos = 28
-                    + (int)header.featureTableJSONByteLength
-                    + (int)header.featureTableBinaryByteLength
-                    + (int)header.batchTableJSONByteLength
-                    + (int)header.batchTableBinaryByteLength;
+            int pos = b3dmHeaderSize
+                      + (int)header.featureTableJSONByteLength
+                      + (int)header.featureTableBinaryByteLength
+                      + (int)header.batchTableJSONByteLength
+                      + (int)header.batchTableBinaryByteLength;
             if (data.Length < pos)
             {
                 Debug.LogError("no GLTF block found. data.Length: " + data.Length + " pos: " + pos);
@@ -88,9 +105,7 @@ namespace GeoTile
 
             GltfData = new ArraySegment<byte>(data, pos, data.Length - pos);
 
-            ReadGLTF(GltfData);
-
-            return true;
+            return ReadGLTF(GltfData);
         }
 
         /// <summary>
@@ -114,11 +129,10 @@ namespace GeoTile
                 var chunkLength = reader.ReadUInt32();
                 var chunkType = reader.ReadUInt32();
 
-
-                GltfJsonData = new ArraySegment<byte>(gltfData.ToArray(), 20, (int) chunkLength);
-                if (GltfJsonData.Count > 0)
+                var gltfJsonData = new ArraySegment<byte>(gltfData.ToArray(), 20, (int) chunkLength);
+                if (gltfJsonData.Count > 0)
                 {
-                    GltfJsonText = Encoding.UTF8.GetString(GltfJsonData.ToArray());
+                    GltfJsonText = Encoding.UTF8.GetString(gltfJsonData.ToArray());
                 }
             }
             return true;

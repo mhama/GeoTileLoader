@@ -250,7 +250,11 @@ namespace GeoTile
         void OnB3DMResult(byte[] data, Action<byte[], double[]> onGLTFReceived)
         {
             var b3dm = new B3DM();
-            b3dm.Read(data);
+            if (!b3dm.Read(data))
+            {
+                Debug.LogError("B3DM読み取りエラー");
+                return;
+            }
 
             /* debug output
             // save feature table json
@@ -297,7 +301,7 @@ namespace GeoTile
         }
 
         /// <summary>
-        /// 衝突判定用の球体を返す
+        /// カリング判定用の球体を返す
         /// </summary>
         /// <returns></returns>
         public SphereCoordsUnity GetBoundingSphere()
