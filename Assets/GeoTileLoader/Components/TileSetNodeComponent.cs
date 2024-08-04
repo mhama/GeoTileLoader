@@ -1,22 +1,11 @@
-﻿//#define USE_UNIGLTF
-
-using GLTFast;
-using GLTFast.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-
-#if USE_UNIGLTF
-using UniGLTF;
-using VRMShaders;
-#endif
 
 namespace GeoTile
 {
@@ -50,12 +39,12 @@ namespace GeoTile
         [field: SerializeField]
         public string BaseJsonUrl { get; set; }
 
-        [field: SerializeField]
         /// <summary>
         /// Googleの3D TilesではjsonURLのsessionパラメータを引き継ぐ必要がある。
         /// しかしこれは3D Tilesの仕様外。
         /// https://github.com/CesiumGS/3d-tiles/issues/746
         /// </summary>
+        [field: SerializeField]
         public string GoogleSessionId { get; set; }
 
         [field: SerializeField]
@@ -81,10 +70,12 @@ namespace GeoTile
 
         public CullingInfo CullingInfo => TileSetInfoProvider.CullingInfo;
 
-        //[field: SerializeField]
-        //public VectorD3 ModelOffset;
-
         private ITileSetInfoProvider tileSetInfoProvider;
+        
+        /// <summary>
+        /// GLTFを実体化する手法を指定
+        /// </summary>
+        private IGltfInstantiator gltfInstantiator;
 
         public string GetContentExtension()
         {
@@ -92,8 +83,17 @@ namespace GeoTile
             return string.IsNullOrEmpty(fileName) ? null : Path.GetExtension(fileName.ToLower());
         }
 
+        private void Awake()
+        {
+#if GEOTILE_USE_UNIGLTF
+            gltfInstantiator = new GltfInstantiatorWithUniGltf();
+#else
+            gltfInstantiator = new GltfInstantiatorWithGltFast();
+#endif
+        }
+
         /// <summary>
-        /// タイルセットの情報を教えてくれる
+        /// タイルセットの情報を教えてくれるインタフェース
         /// </summary>
         public ITileSetInfoProvider TileSetInfoProvider
         {
@@ -113,6 +113,13 @@ namespace GeoTile
             }
         }
 
+        /// <summary>
+        /// 複数段GLTFモデル生成メソッド
+        /// 主にこのコンポーネントのインスペクタから利用する。
+        /// </summary>
+        /// <param name="depth"></param>
+        /// <param name="depthLimit"></param>
+        /// <returns></returns>
         public IEnumerator LoadModelRecursive(int depth, int depthLimit)
         {
             if (depth >= depthLimit)
@@ -154,6 +161,11 @@ namespace GeoTile
             yield return LoadModel();
         }
 
+        /// <summary>
+        /// このノードの3Dモデルを読み込み、instantiateする
+        /// 直接GLBファイルを読める場合と、B3DM形式で包まれている場合がある
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator LoadModel()
         {
             string session = null;
@@ -274,158 +286,7 @@ namespace GeoTile
 
             Debug.Log("OnGLTFReceived: gltfData len: " + gltfData.Length);
 
-#if !USE_UNIGLTF
-            // GLTFastでロード
-            LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), instance =>
-            {
-                Vector3 pos = Vector3.zero;
-                Quaternion rot = Quaternion.identity;
-                Debug.Log("BoundingBoxType: " + component.BoundingBoxType);
-                VectorD3 modelOffset = - component.TileSetInfoProvider.ModelCenterEcefCoordinate;
-                if (component.BoundingBoxType == BoundingBoxType.Box)
-                {
-                    if (center != null)
-                    {
-                        pos = new Vector3(
-                            (float)(center[0] + modelOffset.x),
-                            (float)(center[1] + modelOffset.y),
-                            (float)(center[2] + modelOffset.z)
-                        );
-                    }
-                    else
-                    {
-                        pos = new Vector3(
-                            (float)(- component.GlobalBasePos[0] + modelOffset.x),
-                            (float)(- component.GlobalBasePos[1] + modelOffset.y),
-                            (float)(- component.GlobalBasePos[2] + modelOffset.z)
-                        );
-                    }
-                }
-                else if (component.BoundingBoxType == BoundingBoxType.Region)
-                {
-                    if (component.RootCenterLatLng == null)
-                    {
-                        Debug.LogError("component.RootCenterLatLng is null");
-                    }
-                    var RootBasePos = CoordinateUtil.Vector3FromLatLngAlt(component.RootCenterLatLng);
-                    Debug.Log("RootBasePos: " + string.Join(", ", RootBasePos));
-
-                    if (center != null)
-                    {
-                        // cullingCenterの緯度経度を地図中央にするテスト
-                        pos = new Vector3(
-                            (float)(center[0] + modelOffset.x),
-                            (float)(center[1] + modelOffset.y),
-                            (float)(center[2] + modelOffset.z)
-                        );
-                    }
-                    else
-                    {
-                        pos = new Vector3(
-                            (float)(- RootBasePos[0] + modelOffset.x),
-                            (float)(- RootBasePos[1] + modelOffset.y),
-                            (float)(- RootBasePos[2] + modelOffset.z)
-                        );
-                    }
-                }
-                instance.transform.localPosition = pos;
-                instance.transform.localRotation = Quaternion.Euler(90, 180, 0); // GLTFast conversion (Y: 180) * 3DTiles conversion (X: -90)
-            });
-#endif // !USE_UNIGLTF
-
-#if USE_UNIGLTF
-            // UniGLTFでロード
-            LoadGltfWithUniGLTF(gltfData, component.transform, instance =>
-            {
-                var pos = new Vector3(
-                    (float)(center[0] - component.GlobalBasePos[0]),
-                    (float)(center[1] - component.GlobalBasePos[1]),
-                    (float)(center[2] - component.GlobalBasePos[2])
-                    );
-                instance.transform.localPosition = pos;
-                instance.transform.localRotation = Quaternion.Euler(-90, 0, 0); // 3DTiles conversion (X: -90)
-            });
-#endif // USE_UNIGLTF
-        }
-
-#if USE_UNIGLTF
-        async void LoadGltfWithUniGLTF(byte[] data, Transform parent, Action<GameObject> onResult)
-        {
-            var filePath = "sample.glb";
-            File.WriteAllBytes(filePath, data);
-            Debug.Log($"GLTF written to <{filePath}>");
-
-            var gltfData = new GlbBinaryParser(data, "GLTF").Parse();
-            using (var loader = new UniGLTF.ImporterContext(gltfData))
-            {
-                var instance = await loader.LoadAsync(new ImmediateCaller());
-                instance.EnableUpdateWhenOffscreen();
-                instance.ShowMeshes();
-                instance.transform.SetParent(parent, false);
-                onResult?.Invoke(instance.gameObject);
-            }
-        }
-#endif // USE_UNIGLTF
-
-        /// <summary>
-        /// GLTFast と PlateauのGLTFの相性に問題があり、実質ロードできない！！！
-        /// 
-        /// CESIUM_RTC がRequired Extensionになっているが、GLTFastがサポートしておらず、
-        /// そもそもGLTF2.0の仕様にCESIUM_RTCは存在しない！（1.0にはある。。。）
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="parent"></param>
-        /// <param name="baseUri"></param>
-        async void LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, Action<GameObject> onResult)
-        {
-            GltFastInitializeDeferAgent();
-
-            var filePath = "sample.glb";
-            File.WriteAllBytes(filePath, data);
-            Debug.Log($"GLTF written to <{filePath}>");
-
-            // 強引な手法
-            // CESIUM_RTC拡張がないといわれてロードできない問題の対策
-            // gltf(json形式)内のキー名 extensionsRequired をいじってしまうことで無効化する。
-            //
-            var result = SearchBinaryBlock.IndexOfSequence(data, Encoding.ASCII.GetBytes("extensionsRequired"), 0);
-            if (result.Count > 0)
-            {
-                data[result[0]] = (byte)'X';
-            }
-
-            var gltf = new GltfImport(logger: new UnityLogger());
-            try
-            {
-                bool success = await gltf.LoadGltfBinary(data, baseUri);
-                if (!success)
-                {
-                    Debug.LogError("load gltf failed.");
-                    return;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("load gltf error. " + e);
-                return;
-            }
-
-            var go = new GameObject("GLTF");
-            go.transform.SetParent(parent, false);
-            {
-                bool success = gltf.InstantiateMainScene(go.transform);
-                Debug.Log("load gltf result: " + success);
-            }
-
-            onResult?.Invoke(go);
-        }
-
-        void GltFastInitializeDeferAgent()
-        {
-            if (Application.isEditor)
-            {
-                GltfImport.SetDefaultDeferAgent(new UninterruptedDeferAgent());
-            }
+            gltfInstantiator.Instantiate(gltfData, center, this);
         }
 
         /// <summary>
@@ -442,62 +303,6 @@ namespace GeoTile
                     return CoordinateUtil.GetBoundingSphereFromRegionCoords(TileSetNode.boundingVolume.region);
                 default:
                     return null;
-            }
-        }
-
-        public class UnityLogger : ICodeLogger
-        {
-
-            public void Log(LogType logType, LogCode code, params string[] messages)
-            {
-                switch (logType)
-                {
-                    case LogType.Log:
-                        Debug.Log("Code: " + code + " " + string.Join("\n, ", messages));
-                        break;
-                    case LogType.Error:
-                        Debug.LogError("Code: " + code + " " + string.Join("\n, ", messages));
-                        break;
-                    case LogType.Warning:
-                        Debug.LogWarning("Code: " + code + " " + string.Join("\n, ", messages));
-                        break;
-                    case LogType.Exception:
-                        Debug.LogError("Code: " + code + " " + string.Join("\n, ", messages));
-                        break;
-                    default:
-                        Debug.Log("Code: " + code + " " + string.Join("\n, ", messages));
-                        break;
-                }
-            }
-
-            public void Error(LogCode code, params string[] messages)
-            {
-                Debug.LogError(string.Join("\n, ", messages));
-            }
-
-            public void Error(string message)
-            {
-                Debug.LogError(message);
-            }
-
-            public void Info(LogCode code, params string[] messages)
-            {
-                Debug.Log(string.Join("\n, ", messages));
-            }
-
-            public void Info(string message)
-            {
-                Debug.Log(message);
-            }
-
-            public void Warning(LogCode code, params string[] messages)
-            {
-                Debug.LogWarning(string.Join("\n, ", messages));
-            }
-
-            public void Warning(string message)
-            {
-                Debug.LogWarning(message);
             }
         }
     }

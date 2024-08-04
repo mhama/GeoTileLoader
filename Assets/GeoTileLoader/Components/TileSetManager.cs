@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace GeoTile
 {
     /*
      * 3Dタイルのjsonをパースして、GameObjectのHierarchyを作成する起点となるコンポーネント
+     * 実際の処理はTileSetHierarchyLoaderが行う
      * 現状では、cullingInfo の緯度経度高度の場所をUnity座標系原点にあわせるようにロードされる。(GLTFロード時）
      */
     public class TileSetManager : MonoBehaviour
@@ -20,7 +20,8 @@ namespace GeoTile
         [SerializeField]
         public string tileSetTitle = "";
 
-        [SerializeField] private GeoTileLoaderSettings settings;
+        [SerializeField]
+        private GeoTileLoaderSettings settings;
 
         [SerializeField]
         public Transform parent;
