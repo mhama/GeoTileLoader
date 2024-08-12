@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using GLTFast;
 using GLTFast.Logging;
 using UnityEngine;
@@ -13,64 +15,62 @@ namespace GeoTile
     /// </summary>
     public class GltfInstantiatorWithGltFast : IGltfInstantiator
     {
-        public void Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component)
+        public async UniTask Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token)
         {
             // GLTFastでロード
-            LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), instance =>
+            var instance = await LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), token);
+            Vector3 pos = Vector3.zero;
+            Quaternion rot = Quaternion.identity;
+            Debug.Log("BoundingBoxType: " + component.BoundingBoxType);
+            VectorD3 modelOffset = - component.TileSetInfoProvider.ModelCenterEcefCoordinate;
+            if (component.BoundingBoxType == BoundingBoxType.Box)
             {
-                Vector3 pos = Vector3.zero;
-                Quaternion rot = Quaternion.identity;
-                Debug.Log("BoundingBoxType: " + component.BoundingBoxType);
-                VectorD3 modelOffset = - component.TileSetInfoProvider.ModelCenterEcefCoordinate;
-                if (component.BoundingBoxType == BoundingBoxType.Box)
+                if (center != null)
                 {
-                    if (center != null)
-                    {
-                        pos = new Vector3(
-                            (float)(center[0] + modelOffset.x),
-                            (float)(center[1] + modelOffset.y),
-                            (float)(center[2] + modelOffset.z)
-                        );
-                    }
-                    else
-                    {
-                        pos = new Vector3(
-                            (float)(- component.GlobalBasePos[0] + modelOffset.x),
-                            (float)(- component.GlobalBasePos[1] + modelOffset.y),
-                            (float)(- component.GlobalBasePos[2] + modelOffset.z)
-                        );
-                    }
+                    pos = new Vector3(
+                        (float)(center[0] + modelOffset.x),
+                        (float)(center[1] + modelOffset.y),
+                        (float)(center[2] + modelOffset.z)
+                    );
                 }
-                else if (component.BoundingBoxType == BoundingBoxType.Region)
+                else
                 {
-                    if (component.RootCenterLatLng == null)
-                    {
-                        Debug.LogError("component.RootCenterLatLng is null");
-                    }
-                    var RootBasePos = CoordinateUtil.Vector3FromLatLngAlt(component.RootCenterLatLng);
-                    Debug.Log("RootBasePos: " + string.Join(", ", RootBasePos));
+                    pos = new Vector3(
+                        (float)(- component.GlobalBasePos[0] + modelOffset.x),
+                        (float)(- component.GlobalBasePos[1] + modelOffset.y),
+                        (float)(- component.GlobalBasePos[2] + modelOffset.z)
+                    );
+                }
+            }
+            else if (component.BoundingBoxType == BoundingBoxType.Region)
+            {
+                if (component.RootCenterLatLng == null)
+                {
+                    Debug.LogError("component.RootCenterLatLng is null");
+                }
+                var RootBasePos = CoordinateUtil.Vector3FromLatLngAlt(component.RootCenterLatLng);
+                Debug.Log("RootBasePos: " + string.Join(", ", RootBasePos));
 
-                    if (center != null)
-                    {
-                        // cullingCenterの緯度経度を地図中央にするテスト
-                        pos = new Vector3(
-                            (float)(center[0] + modelOffset.x),
-                            (float)(center[1] + modelOffset.y),
-                            (float)(center[2] + modelOffset.z)
-                        );
-                    }
-                    else
-                    {
-                        pos = new Vector3(
-                            (float)(- RootBasePos[0] + modelOffset.x),
-                            (float)(- RootBasePos[1] + modelOffset.y),
-                            (float)(- RootBasePos[2] + modelOffset.z)
-                        );
-                    }
+                if (center != null)
+                {
+                    // cullingCenterの緯度経度を地図中央にするテスト
+                    pos = new Vector3(
+                        (float)(center[0] + modelOffset.x),
+                        (float)(center[1] + modelOffset.y),
+                        (float)(center[2] + modelOffset.z)
+                    );
                 }
-                instance.transform.localPosition = pos;
-                instance.transform.localRotation = Quaternion.Euler(90, 180, 0); // GLTFast conversion (Y: 180) * 3DTiles conversion (X: -90)
-            });            
+                else
+                {
+                    pos = new Vector3(
+                        (float)(- RootBasePos[0] + modelOffset.x),
+                        (float)(- RootBasePos[1] + modelOffset.y),
+                        (float)(- RootBasePos[2] + modelOffset.z)
+                    );
+                }
+            }
+            instance.transform.localPosition = pos;
+            instance.transform.localRotation = Quaternion.Euler(90, 180, 0); // GLTFast conversion (Y: 180) * 3DTiles conversion (X: -90)          
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace GeoTile
         /// <param name="data"></param>
         /// <param name="parent"></param>
         /// <param name="baseUri"></param>
-        private async void LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, Action<GameObject> onResult)
+        private async UniTask<GameObject> LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, CancellationToken token)
         {
             GltFastInitializeDeferAgent();
 
@@ -103,27 +103,27 @@ namespace GeoTile
             var gltf = new GltfImport(logger: new UnityLogger());
             try
             {
-                bool success = await gltf.LoadGltfBinary(data, baseUri);
+                bool success = await gltf.LoadGltfBinary(data, baseUri, cancellationToken: token);
                 if (!success)
                 {
                     Debug.LogError("load gltf failed.");
-                    return;
+                    return null;
                 }
             }
             catch (Exception e)
             {
                 Debug.LogError("load gltf error. " + e);
-                return;
+                return null;
             }
 
             var go = new GameObject("GLTF");
             go.transform.SetParent(parent, false);
             {
-                bool success = gltf.InstantiateMainScene(go.transform);
+                bool success = await gltf.InstantiateMainSceneAsync(go.transform, cancellationToken: token);
                 Debug.Log("load gltf result: " + success);
             }
 
-            onResult?.Invoke(go);
+            return go;
         }
 
         void GltFastInitializeDeferAgent()
