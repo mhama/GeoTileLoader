@@ -50,8 +50,9 @@ public class FlyController : MonoBehaviour
         }
 
         float referenceScreenSize = Math.Min(Screen.width, Screen.height);
-        float verticalAngleRatio = 6000.0f;
-        float horizontalAngleRatio = 6000.0f;
+
+        // 画面サイズいっぱいにカーソルを動かしたら何度回転するかという比率
+        float screenAngleRatio = 120.0f;
         var mousePositionRatio = new Vector2(Input.mousePosition.x, Input.mousePosition.y) / referenceScreenSize;
 
         // 初回極端な差分が出ないように同じ値にしておく
@@ -70,8 +71,8 @@ public class FlyController : MonoBehaviour
             var mousePositionDiff = mousePositionRatio - prevMousePositionRatio;
             var euler = transform.rotation.eulerAngles;
             euler.z = 0;
-            euler.y += mousePositionDiff.x * horizontalAngleRatio * Time.deltaTime;
-            euler.x += - mousePositionDiff.y * verticalAngleRatio * Time.deltaTime;
+            euler.y += mousePositionDiff.x * screenAngleRatio;
+            euler.x += - mousePositionDiff.y * screenAngleRatio;
             transform.rotation = Quaternion.Euler(euler);
         }
         
