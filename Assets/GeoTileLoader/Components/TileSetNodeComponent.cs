@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -281,7 +282,7 @@ namespace GeoTile
             Debug.Log("OnGLTFReceived: gltfData len: " + gltfData.Length);
 
             PrepareGltfInstantiator();
-            gltfInstantiator.Instantiate(gltfData, center, this);
+            gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy()).Forget();
         }
 
         /// <summary>

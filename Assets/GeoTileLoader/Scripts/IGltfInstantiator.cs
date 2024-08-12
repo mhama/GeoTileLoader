@@ -1,12 +1,14 @@
+using Cysharp.Threading.Tasks;
+using System.Threading;
+
 namespace GeoTile
 {
     /// <summary>
     /// GLTFのインスタンス化インタフェース
-    /// 利用するGLTFライブラリ(glTFast, UniGTTF etc)を変更できるようにするレイヤー
-    /// TODO: async化
+    /// 利用するGLTFライブラリ(glTFast, UniGLTF etc)を変更できるようにするレイヤー
     /// </summary>
     public interface IGltfInstantiator
     {
-        void Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component);
+        UniTask Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token);
     }
 }
