@@ -32,7 +32,7 @@ namespace GeoTile
             cullingLonDegree = 139.7017,
             cullingRadiusMeters = 1000,
         };
-        
+
         /// <summary>
         /// TileSetのルートJSONファイルを読み込む（コールバック版）
         /// ネストされた下位のjsonファイルまでは読み込まない。
@@ -71,7 +71,7 @@ namespace GeoTile
                 RootParent = parent,
                 CullingInfo = cullingInfo,
             });
-            return await loader.ReadJson(true, parentTrans, token);
+            return await loader.ReadJson(null, parentTrans, token);
         }
     }
 }

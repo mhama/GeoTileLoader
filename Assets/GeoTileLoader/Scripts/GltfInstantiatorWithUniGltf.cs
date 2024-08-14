@@ -30,7 +30,7 @@ namespace GeoTile
     /// </summary>
     public class GltfInstantiatorWithUniGltf : IGltfInstantiator
     {
-        public async UniTask Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token)
+        public async UniTask<(bool, TileMeshMetadata)> Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token)
         {
             // UniGLTFでロード
             var instance = await LoadGltfWithUniGLTF(gltfData, component.transform, token);
@@ -86,6 +86,7 @@ namespace GeoTile
             }
             instance.transform.localPosition = pos;
             instance.transform.localRotation = Quaternion.Euler(-90, 0, 0); // 3DTiles conversion (X: -90)
+            return (true, new TileMeshMetadata());
         }
 
         private async UniTask<GameObject> LoadGltfWithUniGLTF(byte[] data, Transform parent, CancellationToken token)

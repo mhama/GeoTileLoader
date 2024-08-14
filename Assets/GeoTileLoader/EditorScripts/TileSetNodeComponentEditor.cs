@@ -55,11 +55,13 @@ namespace GeoTile
                     CullingInfo = Target.CullingInfo,
                     RootParent = Target.TileSetInfoProvider.LoaderConfig.RootParent,
                 });
+
+                var hierarchy = Target.transform.GetComponentInParent<TileSetHierarchy>();
                 UniTask.Void(async () =>
                 {
                     try
                     {
-                        await loader.ReadJson(false, Target.transform, Target.GetCancellationTokenOnDestroy());
+                        await loader.ReadJson(hierarchy, Target.transform, Target.GetCancellationTokenOnDestroy());
                         Debug.Log("ReadJson success.");
                     }
                     catch (Exception e)
