@@ -15,10 +15,10 @@ namespace GeoTile
     /// </summary>
     public class GltfInstantiatorWithGltFast : IGltfInstantiator
     {
-        public async UniTask Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token)
+        public async UniTask<(bool, TileMeshMetadata)> Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token)
         {
             // GLTFastでロード
-            var instance = await LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), token);
+            var (instance, copyright) = await LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), token);
             Vector3 pos = Vector3.zero;
             Quaternion rot = Quaternion.identity;
             Debug.Log("BoundingBoxType: " + component.BoundingBoxType);
@@ -71,6 +71,7 @@ namespace GeoTile
             }
             instance.transform.localPosition = pos;
             instance.transform.localRotation = Quaternion.Euler(90, 180, 0); // GLTFast conversion (Y: 180) * 3DTiles conversion (X: -90)          
+            return (true, new TileMeshMetadata() { Copyright = copyright });
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace GeoTile
         /// <param name="data"></param>
         /// <param name="parent"></param>
         /// <param name="baseUri"></param>
-        private async UniTask<GameObject> LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, CancellationToken token)
+        private async UniTask<(GameObject go, string copyright)> LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, CancellationToken token)
         {
             GltFastInitializeDeferAgent();
 
@@ -107,14 +108,16 @@ namespace GeoTile
                 if (!success)
                 {
                     Debug.LogError("load gltf failed.");
-                    return null;
+                    return (null, null);
                 }
             }
             catch (Exception e)
             {
                 Debug.LogError("load gltf error. " + e);
-                return null;
+                return (null, null);
             }
+
+            var copyright = gltf.GetSourceRoot().asset.copyright;
 
             var go = new GameObject("GLTF");
             go.transform.SetParent(parent, false);
@@ -123,7 +126,7 @@ namespace GeoTile
                 Debug.Log("load gltf result: " + success);
             }
 
-            return go;
+            return (go, copyright);
         }
 
         void GltFastInitializeDeferAgent()

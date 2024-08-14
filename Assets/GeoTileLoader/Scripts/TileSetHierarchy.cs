@@ -36,7 +36,8 @@ namespace GeoTile
     /// </summary>
     public class TileSetHierarchy : MonoBehaviour, ITileSetInfoProvider
     {
-        [SerializeField] private TileSetNodeComponent rootNode;
+        [SerializeField]
+        public TileSetNodeComponent RootNode { get; set; }
 
         public string TileSetName { get; set; }
 
@@ -47,6 +48,35 @@ namespace GeoTile
         public VectorD3 ModelCenterEcefCoordinate { get; set; }
 
         public TileSetHierarchyLoaderConfig LoaderConfig { get; set; }
+
+        /// <summary>
+        /// 著作権表示文字列
+        /// </summary>
+        public string CopyrightAttributionText { get; private set; }
+
+        /// <summary>
+        /// 著作権表示文字列の更新を通知するEvent
+        /// </summary>
+        public event Action<string> OnCopyrightAttributionTextChanged;
+
+        private readonly TileCopyrightCollector copyrightCollector = new TileCopyrightCollector();
+
+        private void Start()
+        {
+            StartCoroutine(LoopCollectCopyright());
+        }
+
+        /// <summary>
+        /// 一定時間おきに著作権表示を収集する
+        /// </summary>
+        private IEnumerator LoopCollectCopyright()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(1.0f);
+                CollectCopyrightAttribution();
+            }
+        }
 
         /// <summary>
         /// 全体的にGLTFをロードする
@@ -165,7 +195,7 @@ namespace GeoTile
                     });
                     try
                     {
-                        await loader.ReadJson(false, node.transform, token);
+                        await loader.ReadJson(this, node.transform, token);
                         Debug.Log($"ReadJson at {trans.name} success.");
                     }
                     catch (Exception e)
@@ -189,6 +219,25 @@ namespace GeoTile
             }
 
             return maxNodes;
+        }
+
+        /// <summary>
+        /// ヒエラルキー内に存在するタイルの著作権表示を収集し、CopyrightAttributionText に保存する。
+        /// 変化時のイベントも投げる。
+        /// </summary>
+        private void CollectCopyrightAttribution()
+        {
+            if (RootNode == null)
+            {
+                return;
+            }
+            var text = copyrightCollector.Collect(RootNode);
+            bool changed = CopyrightAttributionText != text;
+            CopyrightAttributionText = text;
+            if (changed)
+            {
+                OnCopyrightAttributionTextChanged?.Invoke(CopyrightAttributionText);
+            }
         }
     }
 }

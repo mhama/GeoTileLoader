@@ -48,6 +48,9 @@ namespace GeoTile
         [field: SerializeField]
         public LatLngAlt RootCenterLatLng { get; set; } = null;
 
+        [field: SerializeField]
+        public List<string> Copyright { get; private set; }
+
 
         // GLTFのCESIUM_RTC extension に入っているデータ
         [field: SerializeField]
@@ -282,7 +285,20 @@ namespace GeoTile
             Debug.Log("OnGLTFReceived: gltfData len: " + gltfData.Length);
 
             PrepareGltfInstantiator();
-            gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy()).Forget();
+            UniTask.Void(async () =>
+            {
+                if (component == null)
+                {
+                    return;
+                }
+                var (result, metadata) = await gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy());
+
+                // Copyrightを格納する
+                if (!string.IsNullOrEmpty(metadata?.Copyright))
+                {
+                    Copyright = metadata.Copyright.Split(";").ToList();
+                }
+            });
         }
 
         /// <summary>

@@ -16,11 +16,19 @@ namespace GeoTile
         public double cullingRadiusMeters;
     }
 
+    /// <summary>
+    /// タイルセットjsonロード時の設定値
+    /// </summary>
     public class TileSetHierarchyLoaderConfig
     {
         public string TileSetName { get; set; }
         public string TileSetJsonUrl { get; set; }
-        
+
+        /// <summary>
+        /// タイルセット全体の親になるTransform
+        /// サブツリーのルートの話ではないので注意
+        /// nullの場合は、シーン直下に作成される
+        /// </summary>
         public Transform RootParent { get; set; }
         
         public CullingInfo CullingInfo { get; set; }
@@ -42,21 +50,21 @@ namespace GeoTile
         {
             this.config = config;
         }
-        
+
         // Start is called before the first frame update
         /// <summary>
         /// 3DTileSetのjsonをロードする
         /// </summary>
-        /// <param name="isRoot">タイルセットトップのjsonかどうか</param>
+        /// <param name="rootHierarchy">サブツリー読み込み時は、タイルセット全体のルートにあるTileSetHierarchyをわたす。メインツリー読み込み時はnullを指定</param>
         /// <param name="parentTrans">サブツリーを読み込む場合の親Transform</param>
         /// <param name="onResult"></param>
         /// <param name="token"></param>
-        /// <returns>生成されたルートGameObject (isRoot = trueの場合), isRoot = false の場合は parentTrans引数の値を返す。エラーの場合はnullを返す</returns>
-        public async UniTask<Transform> ReadJson(bool isRoot, Transform parentTrans, CancellationToken token)
+        /// <returns>生成されたルートGameObject (rootHierarchy == nullの場合), rootHierarchy != null の場合は parentTrans引数の値を返す。エラーの場合はnullを返す</returns>
+        public async UniTask<Transform> ReadJson(TileSetHierarchy rootHierarchy, Transform parentTrans, CancellationToken token)
         {
             Transform trans = null;
-            TileSetHierarchy hierarchy = null;
-            if (isRoot)
+            TileSetHierarchy hierarchy = rootHierarchy;
+            if (hierarchy == null)
             {
                 var go = new GameObject("Hierarchy: " + config.TileSetName);
                 if (config.RootParent != null)
@@ -163,6 +171,11 @@ namespace GeoTile
                     component.BaseJsonUrl = baseJsonUrl;
                     component.GoogleSessionId = config.GoogleSessionId;
                     component.TileSetInfoProvider = hierarchy;
+
+                    if (hierarchy.RootNode == null)
+                    {
+                        hierarchy.RootNode = component;
+                    }
 
                     if (tileSet.root.boundingVolume.box != null)
                     {
