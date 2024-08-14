@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 namespace GeoTile.Samples
 {
+    /// <summary>
+    /// マップの Copyright表示を TileSetHierarchy から取得してTextに反映するコンポーネント
+    /// 後から TileSetHierarchy を変更しても良い。
+    /// </summary>
     public class CopyrightAttributionUpdater : MonoBehaviour
     {
         [SerializeField]
@@ -13,17 +17,21 @@ namespace GeoTile.Samples
         [SerializeField]
         TileSetHierarchy hierarchy;
 
+        /// <summary>
+        /// Copyright取得元となる TileSetHierarchy を変更する。
+        /// </summary>
+        /// <param name="hierarchy"></param>
         public void SetHierarchy(TileSetHierarchy hierarchy)
         {
             RemoveHierarchyListeners();
             this.hierarchy = hierarchy;
-            AddHierarchyListeners();
+            InitHierarchyListeners();
         }
 
         // Use this for initialization
         void Start()
         {
-            AddHierarchyListeners();
+            InitHierarchyListeners();
         }
 
         private void OnDestroy()
@@ -31,10 +39,12 @@ namespace GeoTile.Samples
             RemoveHierarchyListeners();
         }
 
-        private void AddHierarchyListeners()
+        private void InitHierarchyListeners()
         {
             if (hierarchy != null)
             {
+                // 現時点の情報を更新
+                OnCopyrightAttributionTextChanged(hierarchy.CopyrightAttributionText);
                 hierarchy.OnCopyrightAttributionTextChanged += OnCopyrightAttributionTextChanged;
             }
         }

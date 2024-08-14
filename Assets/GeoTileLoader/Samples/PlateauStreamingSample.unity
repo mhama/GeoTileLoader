@@ -193,6 +193,7 @@ MonoBehaviour:
   load3DModelButton: {fileID: 1771492773}
   stopButton: {fileID: 538890765}
   messageText: {fileID: 1081847680}
+  copyrightAttributionUpdater: {fileID: 0}
 --- !u!114 &21303114
 MonoBehaviour:
   m_ObjectHideFlags: 0

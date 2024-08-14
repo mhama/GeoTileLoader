@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GeoTile
+namespace GeoTile.Samples
 {
     /// <summary>
     /// 3D TileをロードするサンプルUI
@@ -20,6 +20,7 @@ namespace GeoTile
         [SerializeField] private Button stopButton;
         
         [SerializeField] private Text messageText;
+        [SerializeField] private CopyrightAttributionUpdater copyrightAttributionUpdater;
 
         private bool isBusy;
 
@@ -79,6 +80,7 @@ namespace GeoTile
                         throw new Exception("No Hierarchy exist.");
                     }
                     await hierarchy.LoadSubTrees(100, 1000, cts.Token);
+                    copyrightAttributionUpdater?.SetHierarchy(hierarchy);
                     messageText.text = "Loading Subtree Nodes Success!";
                 }
                 catch (Exception e)
@@ -118,7 +120,10 @@ namespace GeoTile
                 }
                 catch (Exception e)
                 {
-                    messageText.text = "Loading 3D Models Error: "+ e;
+                    if (messageText != null)
+                    {
+                        messageText.text = "Loading 3D Models Error: " + e;
+                    }
                 }
                 finally
                 {
