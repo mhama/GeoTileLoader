@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GeoTile
 {
@@ -110,9 +112,13 @@ namespace GeoTile
 
             await ReadJsonFromUrlCoroutine(trans, url, hierarchy, token);
             Debug.Log("ReadJsonFromUrlCoroutine finished!");
-            if (trans.childCount > 0)
+            List<Transform> children = trans
+                           .Cast<Transform>()
+                           .Where(t => t.gameObject.GetComponent<TileSetNodeComponent>() != null)
+                           .ToList();
+            if (children.Count > 0)
             {
-                var child = trans.GetChild(0);
+                var child = children[0];
                 var culling = child.gameObject.AddComponent<SphereCulling>();
                 var centerLatLngAlt = new LatLngAlt(CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLatDegree), CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLonDegree), 0);
                 culling.cullSphereUnity = new SphereCoordsUnity()
@@ -186,6 +192,7 @@ namespace GeoTile
                         {
                             component.NodeContentBasePos = CoordinateUtil.TileCoordToUnity(node.content.boundingVolume.box);
                         }
+                        component.GenerateCollider();
                     }
                     else if(tileSet.root.boundingVolume.region != null)
                     {

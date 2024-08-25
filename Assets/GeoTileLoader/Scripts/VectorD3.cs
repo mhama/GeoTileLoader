@@ -1,5 +1,6 @@
 ﻿
 using System;
+using UnityEngine;
 
 namespace GeoTile
 {
@@ -44,7 +45,14 @@ namespace GeoTile
             return new VectorD3(lhs.x * scalar, lhs.y * scalar, lhs.z * scalar);
         }
 
+        public static VectorD3 operator/ (VectorD3 lhs, double scalar)
+        {
+            return new VectorD3(lhs.x / scalar, lhs.y / scalar, lhs.z / scalar);
+        }
+
 
         public double magnitude => Math.Sqrt(x * x + y * y + z * z);
+
+        public Vector3 ToVector3() => new Vector3((float)x, (float)y, (float)z);
     }
 }

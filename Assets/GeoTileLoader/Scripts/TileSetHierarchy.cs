@@ -167,10 +167,11 @@ namespace GeoTile
             }
 
             {
+                // サブツリーが存在して、既にロードされていなければロードする
                 var node = trans.GetComponent<TileSetNodeComponent>();
                 if (node != null
-                    && trans.childCount == 0
-                    && node.GetContentExtension() == ".json")
+                    && node.SubTreeExists()
+                    && !node.SubTreeAlreadyLoaded())
                 {
                     var contentUrl = node.TileSetNode?.content?.Url;
                     var newUri = new Uri(new Uri(node.BaseJsonUrl), contentUrl);
