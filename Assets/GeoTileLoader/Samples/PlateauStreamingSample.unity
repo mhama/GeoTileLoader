@@ -1542,7 +1542,8 @@ MonoBehaviour:
   cullingInfo:
     cullingLatDegree: 35.681412920705974
     cullingLonDegree: 139.76590345607752
-    cullingRadiusMeters: 500
+    cullingRadiusMeters: 100
+    cullCollider: {fileID: 1882815911}
 --- !u!4 &1809368116
 Transform:
   m_ObjectHideFlags: 0
@@ -1635,7 +1636,7 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 300
-  m_Height: 1000
+  m_Height: 2000
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1882815912
