@@ -115,7 +115,7 @@ namespace GeoTile
             }
 
             // refine が REPLACEの場合、親ノードのモデルは重複して邪魔になるのでロードしない。
-            if (node.TileSetNode.refine == "REPLACE" && node.transform.childCount > 0)
+            if (node.TileSetNode.refine == "REPLACE" && node.HasChildNode())
             {
                 Debug.Log($"Skipped loading {node.gameObject.name} because there's children.");
                 return;
@@ -167,10 +167,11 @@ namespace GeoTile
             }
 
             {
+                // サブツリーが存在して、既にロードされていなければロードする
                 var node = trans.GetComponent<TileSetNodeComponent>();
                 if (node != null
-                    && trans.childCount == 0
-                    && node.GetContentExtension() == ".json")
+                    && node.SubTreeExists()
+                    && !node.SubTreeAlreadyLoaded())
                 {
                     var contentUrl = node.TileSetNode?.content?.Url;
                     var newUri = new Uri(new Uri(node.BaseJsonUrl), contentUrl);
@@ -195,7 +196,7 @@ namespace GeoTile
                     });
                     try
                     {
-                        await loader.ReadJson(this, node.transform, token);
+                        await loader.ReadJson(this, node.transform, node.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, token);
                         Debug.Log($"ReadJson at {trans.name} success.");
                     }
                     catch (Exception e)

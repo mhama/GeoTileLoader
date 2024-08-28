@@ -71,6 +71,21 @@ namespace GeoTile
             return string.IsNullOrEmpty(fileName) ? null : Path.GetExtension(fileName.ToLower());
         }
 
+        public bool SubTreeExists()
+        {
+            return GetContentExtension() == ".json";
+        }
+
+        public bool SubTreeAlreadyLoaded()
+        {
+            return SubTreeExists() && transform.Find("0") != null;
+        }
+
+        public bool HasChildNode()
+        {
+            return transform.Cast<Transform>().Where(t => t.GetComponent<TileSetNodeComponent>() != null).Any();
+        }
+
         private void PrepareGltfInstantiator()
         {
             if (gltfInstantiator != null)
@@ -316,6 +331,87 @@ namespace GeoTile
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// UnityのCollider作成
+        /// 現状 BoundingVolumeTypeが Box の場合のみ。
+        /// つまりGoogle 3D Tilesでは動くがPLATEAU Streamingでは動かない (2024/8現在の状況)
+        /// </summary>
+        public void GenerateCollider()
+        {
+            if (BoundingBoxType == BoundingBoxType.Box)
+            {
+                GenerateColliderForBox();
+            }
+            else if (BoundingBoxType == BoundingBoxType.Region)
+            {
+                GenerateColliderForRegion();
+            }
+        }
+
+        /// <summary>
+        /// BoxタイプのBoundingVolumeに対応するUnityのBoxColliderを作成する
+        /// できるだけdouble精度で計算し、最後にUnityのColliderの座標を設定する
+        /// </summary>
+        private void GenerateColliderForBox()
+        {
+            var (colliderTrans, collider) = GetOrCreateColliderGameObject<BoxCollider>();
+            var box = TileSetNode.boundingVolume.box;
+            var centerPos = new VectorD3(box[0], box[1], -box[2]);
+            var halfExtentX = new VectorD3(box[3], box[4], -box[5]);
+            var halfExtentY = new VectorD3(box[6], box[7], -box[8]);
+            var halfExtentZ = new VectorD3(box[9], box[10], -box[11]);
+            double halfLengthX = halfExtentX.magnitude;
+            double halfLengthY = halfExtentY.magnitude;
+            double halfLengthZ = halfExtentZ.magnitude;
+
+            var normalY = halfExtentY / halfLengthY;
+            var normalZ = halfExtentZ / halfLengthZ;
+
+            VectorD3 modelOffset = -TileSetInfoProvider.ModelCenterEcefCoordinate;
+
+            colliderTrans.localRotation = Quaternion.LookRotation(normalZ.ToVector3(), normalY.ToVector3());
+            colliderTrans.localPosition = (centerPos + modelOffset).ToVector3();
+            collider.center = Vector3.zero;
+            collider.size = new VectorD3(halfLengthX * 2, halfLengthY * 2, halfLengthZ * 2).ToVector3();
+        }
+
+        /// <summary>
+        /// Region用のコライダー生成
+        /// 処理をサボっており、タイルを包含する球体コライダーにしている。
+        /// 本来はもう少し無駄の少ないコライダーにできるはず。
+        /// </summary>
+        private void GenerateColliderForRegion()
+        {
+            var sphere = GetBoundingSphere();
+            var (colliderTrans, collider) = GetOrCreateColliderGameObject<SphereCollider>();
+            VectorD3 modelOffset = -TileSetInfoProvider.ModelCenterEcefCoordinate;
+            colliderTrans.localPosition = (sphere.center + modelOffset).ToVector3();
+            collider.center = Vector3.zero;
+            collider.radius = (float) sphere.radiusMeters;
+        }
+
+        /// <summary>
+        /// Collider用GameObjectを取得または生成して返す
+        /// </summary>
+        /// <typeparam name="T">Colliderの派生タイプ</typeparam>
+        /// <returns></returns>
+        private (Transform trans, T collider) GetOrCreateColliderGameObject<T>() where T: Collider
+        {
+            var colliderTrans = transform.Find(SphereCulling.ColliderGameObjectName);
+            if (colliderTrans == null)
+            {
+                var colliderGO = new GameObject(SphereCulling.ColliderGameObjectName);
+                colliderTrans = colliderGO.transform;
+                colliderTrans.SetParent(transform, false);
+            }
+            var collider = colliderTrans.GetComponent<T>();
+            if (collider == null)
+            {
+                collider = colliderTrans.gameObject.AddComponent<T>();
+            }
+            return (colliderTrans, collider);
         }
     }
 }

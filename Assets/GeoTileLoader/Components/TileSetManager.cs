@@ -71,7 +71,7 @@ namespace GeoTile
                 RootParent = parent,
                 CullingInfo = cullingInfo,
             });
-            return await loader.ReadJson(null, parentTrans, token);
+            return await loader.ReadJson(null, parentTrans, cullingInfo.cullCollider, token);
         }
     }
 }

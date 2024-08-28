@@ -85,6 +85,7 @@ namespace GeoTile.Samples
                 }
                 catch (Exception e)
                 {
+                    Debug.LogError("Loading Hierarchy Error: " + e);
                     messageText.text = "Loading Hierarchy Error: "+ e;
                 }
                 finally

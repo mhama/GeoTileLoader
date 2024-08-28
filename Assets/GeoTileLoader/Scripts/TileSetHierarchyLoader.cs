@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GeoTile
 {
@@ -14,6 +16,7 @@ namespace GeoTile
         public double cullingLatDegree;
         public double cullingLonDegree;
         public double cullingRadiusMeters;
+        public Collider cullCollider;
     }
 
     /// <summary>
@@ -60,7 +63,7 @@ namespace GeoTile
         /// <param name="onResult"></param>
         /// <param name="token"></param>
         /// <returns>生成されたルートGameObject (rootHierarchy == nullの場合), rootHierarchy != null の場合は parentTrans引数の値を返す。エラーの場合はnullを返す</returns>
-        public async UniTask<Transform> ReadJson(TileSetHierarchy rootHierarchy, Transform parentTrans, CancellationToken token)
+        public async UniTask<Transform> ReadJson(TileSetHierarchy rootHierarchy, Transform parentTrans, Collider cullCollider, CancellationToken token)
         {
             Transform trans = null;
             TileSetHierarchy hierarchy = rootHierarchy;
@@ -110,9 +113,13 @@ namespace GeoTile
 
             await ReadJsonFromUrlCoroutine(trans, url, hierarchy, token);
             Debug.Log("ReadJsonFromUrlCoroutine finished!");
-            if (trans.childCount > 0)
+            List<Transform> children = trans
+                           .Cast<Transform>()
+                           .Where(t => t.gameObject.GetComponent<TileSetNodeComponent>() != null)
+                           .ToList();
+            if (children.Count > 0)
             {
-                var child = trans.GetChild(0);
+                var child = children[0];
                 var culling = child.gameObject.AddComponent<SphereCulling>();
                 var centerLatLngAlt = new LatLngAlt(CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLatDegree), CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLonDegree), 0);
                 culling.cullSphereUnity = new SphereCoordsUnity()
@@ -123,7 +130,7 @@ namespace GeoTile
                 };
                 
                 // カリング球体の外にあるノードを刈る
-                culling.DoCulling();
+                culling.DoCulling(cullCollider);
             }
 
             return trans;
@@ -196,6 +203,7 @@ namespace GeoTile
                             component.NodeCenterLatLng = CoordinateUtil.CenterLatLngOfRegion(node.content.boundingVolume.region);
                         }
                     }
+                    component.GenerateCollider();
                 });
                 return;
             }

@@ -58,7 +58,7 @@ namespace GeoTile
 
         public static VectorD3 DoubleArrayToVector3(double[] src)
         {
-            return new VectorD3((float)src[0], (float)src[1], (float)src[2]);
+            return new VectorD3(src[0], src[1], src[2]);
         }
 
         /// <summary>

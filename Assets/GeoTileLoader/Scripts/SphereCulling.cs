@@ -32,10 +32,18 @@ namespace GeoTile
         public SphereCoordsUnity cullSphereUnity;
 
         /// <summary>
+        /// カリング範囲を示すコライダー
+        /// </summary>
+        private Collider cullCollider;
+
+        public static readonly string ColliderGameObjectName = "Collider";
+
+        /// <summary>
         /// カリングを行い、配下にある指定範囲以外のTileSetNodeComponentをDestroyする
         /// </summary>
-        public void DoCulling()
+        public void DoCulling(Collider cullCollider)
         {
+            this.cullCollider = cullCollider;
             TileSetNodeComponent comp = GetComponent<TileSetNodeComponent>();
             if (comp == null)
             {
@@ -52,17 +60,46 @@ namespace GeoTile
         /// <param name="cullSphereUnity"></param>
         private void CullResursive(TileSetNodeComponent tileSetNodeComponent, SphereCoordsUnity cullSphereUnity)
         {
-            if (tileSetNodeComponent.BoundingBoxType != BoundingBoxType.Box
-                && tileSetNodeComponent.BoundingBoxType != BoundingBoxType.Region)
+            // UnityのColliderがある場合はそれで判定
+            var colliderGO = tileSetNodeComponent.transform.Find(SphereCulling.ColliderGameObjectName);
+            var collider = colliderGO?.GetComponent<Collider>();
+            if (cullCollider != null && collider != null)
             {
-                return;
+                Vector3 direction;
+                float distance;
+                bool areCollide = Physics.ComputePenetration(
+                    cullCollider, cullCollider.transform.position, cullCollider.transform.rotation,
+                    collider, collider.transform.position, collider.transform.rotation,
+                    out direction, out distance);
+                Debug.Log($"Check Collision node: {tileSetNodeComponent} areCollide: {areCollide}");
+                if (!areCollide)
+                {
+                    DestroyImmediate(tileSetNodeComponent.gameObject);
+                    return;
+                }
             }
-            var boundingSphere = tileSetNodeComponent.GetBoundingSphere();
-            if (!cullSphereUnity.IsCollidesWith(boundingSphere))
-            {
-                DestroyImmediate(tileSetNodeComponent.gameObject);
-            }
+
+            /* UnityのColliderを利用しない方法は一旦利用しないことにする
             else
+            {
+                // UnityのColliderがない場合は包含Sphereで判定
+
+                if (tileSetNodeComponent.BoundingBoxType != BoundingBoxType.Box
+                    && tileSetNodeComponent.BoundingBoxType != BoundingBoxType.Region)
+                {
+                    return;
+                }
+
+                var boundingSphere = tileSetNodeComponent.GetBoundingSphere();
+                if (!cullSphereUnity.IsCollidesWith(boundingSphere))
+                {
+                    DestroyImmediate(tileSetNodeComponent.gameObject);
+                    return;
+                }
+            }
+            */
+
+            // Destroyしない場合は子nodeも確認
             {
                 var targets = new List<TileSetNodeComponent>();
                 foreach(Transform child in tileSetNodeComponent.transform)
