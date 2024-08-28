@@ -115,7 +115,7 @@ namespace GeoTile
             }
 
             // refine が REPLACEの場合、親ノードのモデルは重複して邪魔になるのでロードしない。
-            if (node.TileSetNode.refine == "REPLACE" && node.transform.childCount > 0)
+            if (node.TileSetNode.refine == "REPLACE" && node.HasChildNode())
             {
                 Debug.Log($"Skipped loading {node.gameObject.name} because there's children.");
                 return;

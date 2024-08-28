@@ -81,6 +81,8 @@ namespace GeoTile
                     return;
                 }
             }
+
+            /* UnityのColliderを利用しない方法は一旦利用しないことにする
             else
             {
                 // UnityのColliderがない場合は包含Sphereで判定
@@ -98,6 +100,7 @@ namespace GeoTile
                     return;
                 }
             }
+            */
 
             // Destroyしない場合は子nodeも確認
             {

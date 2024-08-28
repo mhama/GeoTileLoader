@@ -81,6 +81,11 @@ namespace GeoTile
             return SubTreeExists() && transform.Find("0") != null;
         }
 
+        public bool HasChildNode()
+        {
+            return transform.Cast<Transform>().Where(t => t.GetComponent<TileSetNodeComponent>() != null).Any();
+        }
+
         private void PrepareGltfInstantiator()
         {
             if (gltfInstantiator != null)
@@ -335,8 +340,13 @@ namespace GeoTile
         /// </summary>
         public void GenerateCollider()
         {
-            if (BoundingBoxType == BoundingBoxType.Box) {
+            if (BoundingBoxType == BoundingBoxType.Box)
+            {
                 GenerateColliderForBox();
+            }
+            else if (BoundingBoxType == BoundingBoxType.Region)
+            {
+                GenerateColliderForRegion();
             }
         }
 
@@ -365,6 +375,21 @@ namespace GeoTile
             colliderTrans.localPosition = (centerPos + modelOffset).ToVector3();
             collider.center = Vector3.zero;
             collider.size = new VectorD3(halfLengthX * 2, halfLengthY * 2, halfLengthZ * 2).ToVector3();
+        }
+
+        /// <summary>
+        /// Region用のコライダー生成
+        /// 処理をサボっており、タイルを包含する球体コライダーにしている。
+        /// 本来はもう少し無駄の少ないコライダーにできるはず。
+        /// </summary>
+        private void GenerateColliderForRegion()
+        {
+            var sphere = GetBoundingSphere();
+            var (colliderTrans, collider) = GetOrCreateColliderGameObject<SphereCollider>();
+            VectorD3 modelOffset = -TileSetInfoProvider.ModelCenterEcefCoordinate;
+            colliderTrans.localPosition = (sphere.center + modelOffset).ToVector3();
+            collider.center = Vector3.zero;
+            collider.radius = (float) sphere.radiusMeters;
         }
 
         /// <summary>

@@ -192,7 +192,6 @@ namespace GeoTile
                         {
                             component.NodeContentBasePos = CoordinateUtil.TileCoordToUnity(node.content.boundingVolume.box);
                         }
-                        component.GenerateCollider();
                     }
                     else if(tileSet.root.boundingVolume.region != null)
                     {
@@ -203,6 +202,7 @@ namespace GeoTile
                             component.NodeCenterLatLng = CoordinateUtil.CenterLatLngOfRegion(node.content.boundingVolume.region);
                         }
                     }
+                    component.GenerateCollider();
                 });
                 return;
             }
