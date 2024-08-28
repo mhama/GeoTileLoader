@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028373, g: 0.22571398, b: 0.30692294, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1534,15 +1534,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c7933ad17d07ca4b9fbea724494dff1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileSetJsonUrl: https://assets.cms.plateau.reearth.io/assets/e8/3dbe22-f1f7-4c11-8747-2655a386f5a6/13108_koto-ku_pref_2023_citygml_1_op_bldg_3dtiles_13108_koto-ku_lod2_no_texture/tileset.json
-  tileSetTitle: "\u6771\u4EAC\u90FD:[\u6771\u4EAC\u90FD] \u5EFA\u7BC9\u7269\u30E2\u30C7\u30EB\uFF08\u6C5F\u6771\u533A\uFF09
+  tileSetJsonUrl: https://assets.cms.plateau.reearth.io/assets/db/070026-aa27-431b-8d53-7cc6b03244f8/13101_chiyoda-ku_pref_2023_citygml_1_op_bldg_3dtiles_13101_chiyoda-ku_lod2_no_texture/tileset.json
+  tileSetTitle: "\u6771\u4EAC\u90FD:[\u6771\u4EAC\u90FD] \u5EFA\u7BC9\u7269\u30E2\u30C7\u30EB\uFF08\u5343\u4EE3\u7530\u533A\uFF09
     lod:2 no texture"
   settings: {fileID: 11400000, guid: 9d2574871990e284a92694c618d66693, type: 2}
   parent: {fileID: 0}
   cullingInfo:
-    cullingLatDegree: 35.6244546073176
-    cullingLonDegree: 139.775492868462
-    cullingRadiusMeters: 300
+    cullingLatDegree: 35.681412920705974
+    cullingLonDegree: 139.76590345607752
+    cullingRadiusMeters: 500
 --- !u!4 &1809368116
 Transform:
   m_ObjectHideFlags: 0
