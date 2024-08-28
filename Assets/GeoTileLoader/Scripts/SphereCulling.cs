@@ -31,6 +31,9 @@ namespace GeoTile
     {
         public SphereCoordsUnity cullSphereUnity;
 
+        /// <summary>
+        /// カリング範囲を示すコライダー
+        /// </summary>
         private Collider cullCollider;
 
         public static readonly string ColliderGameObjectName = "Collider";
@@ -38,16 +41,10 @@ namespace GeoTile
         /// <summary>
         /// カリングを行い、配下にある指定範囲以外のTileSetNodeComponentをDestroyする
         /// </summary>
-        public void DoCulling()
+        public void DoCulling(Collider cullCollider)
         {
+            this.cullCollider = cullCollider;
             TileSetNodeComponent comp = GetComponent<TileSetNodeComponent>();
-
-            // TODO: 名前指定で取得してくるのはよくない。
-            var cullColliderGO = GameObject.Find("CullCollider");
-            if (cullColliderGO != null)
-            {
-                cullCollider = cullColliderGO.GetComponent<Collider>();
-            }
             if (comp == null)
             {
                 Debug.LogWarning("no TileSetNodeComponent found.");

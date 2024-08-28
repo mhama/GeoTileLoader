@@ -196,7 +196,7 @@ namespace GeoTile
                     });
                     try
                     {
-                        await loader.ReadJson(this, node.transform, token);
+                        await loader.ReadJson(this, node.transform, node.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, token);
                         Debug.Log($"ReadJson at {trans.name} success.");
                     }
                     catch (Exception e)

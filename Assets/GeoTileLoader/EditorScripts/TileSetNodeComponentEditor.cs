@@ -61,7 +61,7 @@ namespace GeoTile
                 {
                     try
                     {
-                        await loader.ReadJson(hierarchy, Target.transform, Target.GetCancellationTokenOnDestroy());
+                        await loader.ReadJson(hierarchy, Target.transform, Target.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, Target.GetCancellationTokenOnDestroy());
                         Debug.Log("ReadJson success.");
                     }
                     catch (Exception e)
