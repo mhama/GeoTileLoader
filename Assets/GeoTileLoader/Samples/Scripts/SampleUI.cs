@@ -79,7 +79,7 @@ namespace GeoTile.Samples
                     {
                         throw new Exception("No Hierarchy exist.");
                     }
-                    await hierarchy.LoadSubTrees(100, 1000, cts.Token);
+                    await hierarchy.LoadSubTrees(100, 1500, cts.Token);
                     copyrightAttributionUpdater?.SetHierarchy(hierarchy);
                     messageText.text = "Loading Subtree Nodes Success!";
                 }
