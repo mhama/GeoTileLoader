@@ -84,8 +84,6 @@ namespace GeoTile
         /// <param name="baseUri"></param>
         private async UniTask<(GameObject go, string copyright)> LoadGltfWithGLTFast(byte[] data, Transform parent, Uri baseUri, CancellationToken token)
         {
-            GltFastInitializeDeferAgent();
-
             //var filePath = "sample.glb";
             //File.WriteAllBytes(filePath, data);
             //Debug.Log($"GLTF written to <{filePath}>");
@@ -128,7 +126,7 @@ namespace GeoTile
             return (go, copyright);
         }
 
-        void GltFastInitializeDeferAgent()
+        static void GltFastInitializeDeferAgent()
         {
             if (Application.isEditor)
             {
