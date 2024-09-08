@@ -53,7 +53,7 @@ namespace GeoTile.Samples
 
         private void ReflectLatLonFromCullingInfo()
         {
-            latLonInputField.text = $"{manager.cullingInfo.cullingLatDegree:F6}, {manager.cullingInfo.cullingLonDegree:F6}";
+            latLonInputField.text = $"{manager.cullingInfo.cullingLatDegree:F8}, {manager.cullingInfo.cullingLonDegree:F8}";
         }
 
         private void ApplyToCullingInfo(float lat, float lon)
