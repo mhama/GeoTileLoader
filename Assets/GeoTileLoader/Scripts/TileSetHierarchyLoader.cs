@@ -120,7 +120,7 @@ namespace GeoTile
             if (children.Count > 0)
             {
                 var child = children[0];
-                var culling = child.gameObject.AddComponent<SphereCulling>();
+                var culling = child.gameObject.AddComponent<NodeCulling>();
                 var centerLatLngAlt = new LatLngAlt(CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLatDegree), CoordinateUtil.DegreeToRadian(config.CullingInfo.cullingLonDegree), 0);
                 culling.cullSphereUnity = new SphereCoordsUnity()
                 {

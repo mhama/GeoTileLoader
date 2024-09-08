@@ -25,16 +25,26 @@ namespace GeoTile
     }
 
     /// <summary>
-    /// 球状領域でカリングする
+    /// 球状領域またはコライダーでTileSetNodeをカリングする
     /// </summary>
-    public class SphereCulling : MonoBehaviour
+    public class NodeCulling : MonoBehaviour
     {
+        public enum NodeDisableMethod {
+            Destroy,
+            Inactivate,
+        }
         public SphereCoordsUnity cullSphereUnity;
 
         /// <summary>
         /// カリング範囲を示すコライダー
         /// </summary>
         private Collider cullCollider;
+
+
+        /// <summary>
+        /// オブジェクトがカリングされる時の処理方法
+        /// </summary>
+        private NodeDisableMethod disableMethod = NodeDisableMethod.Destroy;
 
         public static readonly string ColliderGameObjectName = "Collider";
 
@@ -61,7 +71,7 @@ namespace GeoTile
         private void CullResursive(TileSetNodeComponent tileSetNodeComponent, SphereCoordsUnity cullSphereUnity)
         {
             // UnityのColliderがある場合はそれで判定
-            var colliderGO = tileSetNodeComponent.transform.Find(SphereCulling.ColliderGameObjectName);
+            var colliderGO = tileSetNodeComponent.transform.Find(NodeCulling.ColliderGameObjectName);
             var collider = colliderGO?.GetComponent<Collider>();
             if (cullCollider != null && collider != null)
             {
@@ -72,9 +82,18 @@ namespace GeoTile
                     collider, collider.transform.position, collider.transform.rotation,
                     out direction, out distance);
                 Debug.Log($"Check Collision node: {tileSetNodeComponent} areCollide: {areCollide}");
+
+                // 領域外の場合の処理
                 if (!areCollide)
                 {
-                    DestroyImmediate(tileSetNodeComponent.gameObject);
+                    if (disableMethod == NodeDisableMethod.Destroy)
+                    {
+                        DestroyImmediate(tileSetNodeComponent.gameObject);
+                    }
+                    else
+                    {
+                        tileSetNodeComponent.gameObject.SetActive(false);
+                    }
                     return;
                 }
             }

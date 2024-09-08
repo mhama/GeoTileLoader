@@ -81,9 +81,9 @@ namespace GeoTile
             return SubTreeExists() && transform.Find("0") != null;
         }
 
-        public bool HasChildNode()
+        public bool HasActiveChildNode()
         {
-            return transform.Cast<Transform>().Where(t => t.GetComponent<TileSetNodeComponent>() != null).Any();
+            return transform.Cast<Transform>().Where(t => t.gameObject.activeInHierarchy && t.GetComponent<TileSetNodeComponent>() != null).Any();
         }
 
         private void PrepareGltfInstantiator()
@@ -393,10 +393,10 @@ namespace GeoTile
         /// <returns></returns>
         private (Transform trans, T collider) GetOrCreateColliderGameObject<T>() where T: Collider
         {
-            var colliderTrans = transform.Find(SphereCulling.ColliderGameObjectName);
+            var colliderTrans = transform.Find(NodeCulling.ColliderGameObjectName);
             if (colliderTrans == null)
             {
-                var colliderGO = new GameObject(SphereCulling.ColliderGameObjectName);
+                var colliderGO = new GameObject(NodeCulling.ColliderGameObjectName);
                 colliderTrans = colliderGO.transform;
                 colliderTrans.SetParent(transform, false);
             }

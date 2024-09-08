@@ -115,7 +115,7 @@ namespace GeoTile
             }
 
             // refine が REPLACEの場合、親ノードのモデルは重複して邪魔になるのでロードしない。
-            if (node.TileSetNode.refine == "REPLACE" && node.HasChildNode())
+            if (node.TileSetNode.refine == "REPLACE" && node.HasActiveChildNode())
             {
                 Debug.Log($"Skipped loading {node.gameObject.name} because there's children.");
                 return;
@@ -126,6 +126,7 @@ namespace GeoTile
                 node.TileSetInfoProvider.LoaderConfig?.CullingInfo.cullingRadiusMeters * 50)
             {
                 Debug.Log($"Skipped loading {node.gameObject.name} because this tile's bounding sphere radius is {node.GetBoundingSphere().radiusMeters / 1000.0:F1}km");
+                return;
             }
 
             // 既にあったらロードしない
@@ -170,6 +171,7 @@ namespace GeoTile
                 // サブツリーが存在して、既にロードされていなければロードする
                 var node = trans.GetComponent<TileSetNodeComponent>();
                 if (node != null
+                    && node.gameObject.activeInHierarchy
                     && node.SubTreeExists()
                     && !node.SubTreeAlreadyLoaded())
                 {
@@ -209,7 +211,7 @@ namespace GeoTile
             foreach (Transform child in trans)
             {
                 var node = child.GetComponent<TileSetNodeComponent>();
-                if (node != null)
+                if (node != null && node.gameObject.activeInHierarchy)
                 {
                     maxNodes = await LoadSubTreesRecursive(child, maxLevels - 1, maxNodes, token);
                     if (maxNodes <= 0)
