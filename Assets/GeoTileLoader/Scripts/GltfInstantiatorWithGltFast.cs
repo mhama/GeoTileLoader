@@ -21,7 +21,6 @@ namespace GeoTile
             var (instance, copyright) = await LoadGltfWithGLTFast(gltfData, component.transform, new Uri(component.BaseJsonUrl), token);
             Vector3 pos = Vector3.zero;
             Quaternion rot = Quaternion.identity;
-            Debug.Log("BoundingBoxType: " + component.BoundingBoxType);
             VectorD3 modelOffset = - component.TileSetInfoProvider.ModelCenterEcefCoordinate;
             if (component.BoundingBoxType == BoundingBoxType.Box)
             {

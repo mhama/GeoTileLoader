@@ -182,7 +182,6 @@ namespace GeoTile
             {
                 session = sessionPair.ToList()[0][1];
             }
-            Debug.Log("session :" + session);
 
             var modelRelativeUrl = TileSetNode?.content?.Url;
             if (string.IsNullOrEmpty(modelRelativeUrl))
@@ -194,12 +193,10 @@ namespace GeoTile
             {
                 modelRelativeUrl += (modelRelativeUrl.Contains("?") ? "&" : "?") + "key=" + TileSetInfoProvider.LoaderConfig.GoogleMapTileApiKey + "&session=" + session;
             }
-            Debug.Log("modelRelativeUrl: " + modelRelativeUrl);
             var modelUri = new Uri(new Uri(BaseJsonUrl), modelRelativeUrl);
             var ModelAbsoluteUri = modelUri.AbsoluteUri;
 
             var ext = Path.GetExtension(modelUri.PathAndQuery.Split('?')[0]);
-            Debug.Log("ext: " + ext);
             if (ext?.ToLower() == ".glb")
             {
                 yield return LoadGLB(ModelAbsoluteUri, OnGLTFReceived);
@@ -222,7 +219,6 @@ namespace GeoTile
                     Debug.LogError("load error: " + req.error);
                     yield break;
                 }
-                Debug.Log("loading success.");
                 double[] center = {0,0,0};
                 onGLTFReceived(buf.data, center);
             }
@@ -296,8 +292,6 @@ namespace GeoTile
         {
             var component = this;
             this.gltfCenter = center;
-
-            Debug.Log("OnGLTFReceived: gltfData len: " + gltfData.Length);
 
             PrepareGltfInstantiator();
             UniTask.Void(async () =>

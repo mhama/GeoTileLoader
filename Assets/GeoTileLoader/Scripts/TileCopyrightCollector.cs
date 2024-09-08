@@ -12,6 +12,8 @@ namespace GeoTile
     /// </summary>
     public class TileCopyrightCollector
     {
+        private string lastLogText = "";
+
         /// <summary>
         /// 著作権者の名称のリストを収集する
         /// ノードをすべてまわり、著作権表示を出現回数順（降順）に並べ、合体させた文字列を返す
@@ -23,7 +25,13 @@ namespace GeoTile
             var stats = new Dictionary<string, int>();
             CollectRecursive(stats, root);
 
-            Debug.Log("Copyright holders: \n" + string.Join("\n", stats.Select(pair => $"{pair.Key} : {pair.Value}")));
+            // 前回と異なる場合のみログを出す
+            var logText = "Copyright holders: \n" + string.Join("\n", stats.Select(pair => $"{pair.Key} : {pair.Value}"));
+            if (logText != lastLogText)
+            {
+                lastLogText = logText;
+                Debug.Log(logText);
+            }
 
             // 出現回数(Value)順にソートした後、Keyに入っている著作権者名称を出現回数順に並べる。
             return string.Join(", ", stats.OrderBy(pair => pair.Value).Select(pair => pair.Key));
