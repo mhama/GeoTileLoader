@@ -2175,9 +2175,9 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: c76f7b24b765c4cf5aa7188da6f87c1a, type: 2}
   parent: {fileID: 0}
   cullingInfo:
-    cullingLatDegree: 35.6590527
-    cullingLonDegree: 139.7006323
-    cullingRadiusMeters: 300
+    cullingLatDegree: 35.6593700391144
+    cullingLonDegree: 139.70065994474749
+    cullingRadiusMeters: 250
     cullCollider: {fileID: 588499778}
 --- !u!4 &1809368116
 Transform:
