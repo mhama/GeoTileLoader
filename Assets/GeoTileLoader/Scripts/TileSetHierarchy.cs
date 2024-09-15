@@ -135,7 +135,7 @@ namespace GeoTile
                 return;
             }
 
-            await node.LoadModel();
+            await node.LoadModel(token);
             await UniTask.Delay(20, cancellationToken: token);
         }
 

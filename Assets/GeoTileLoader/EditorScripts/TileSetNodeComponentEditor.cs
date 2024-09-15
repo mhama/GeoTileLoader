@@ -76,45 +76,53 @@ namespace GeoTile
 
             if (GUILayout.Button("Load GLTF " + (gltfFound ? "":"(not available)") + (alreadyLoaded ? "(already loaded)" : "" )))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModel(), this);
+                LoadModelRecursive(Target, 1);
             }
 
             if (GUILayout.Button("Load GLTF Under This (2 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 2), this);
+                LoadModelRecursive(Target, 2);
             }
             if (GUILayout.Button("Load GLTF Under This (3 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 3), this);
+                LoadModelRecursive(Target, 3);
             }
             if (GUILayout.Button("Load GLTF Under This (4 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 4), this);
+                LoadModelRecursive(Target, 4);
             }
             if (GUILayout.Button("Load GLTF Under This (5 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 5), this);
+                LoadModelRecursive(Target, 5);
             }
             if (GUILayout.Button("Load GLTF Under This (6 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 6), this);
+                LoadModelRecursive(Target, 6);
             }
             if (GUILayout.Button("Load GLTF Under This (7 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 7), this);
+                LoadModelRecursive(Target, 7);
             }
             if (GUILayout.Button("Load GLTF Under This (8 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 8), this);
+                LoadModelRecursive(Target, 8);
             }
             if (GUILayout.Button("Load GLTF Under This (9 Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 9), this);
+                LoadModelRecursive(Target, 9);
             }
             if (GUILayout.Button("Load GLTF Under This (Unlimited(100) Level)"))
             {
-                EditorCoroutineUtility.StartCoroutine(Target.LoadModelRecursive(0, 100), this);
+                LoadModelRecursive(Target, 100);
             }
+        }
+
+        void LoadModelRecursive(TileSetNodeComponent node, int depthLimit)
+        {
+            EditorCoroutineUtility.StartCoroutine(UniTask.ToCoroutine(async () =>
+            {
+                await Target.LoadModelRecursive(0, depthLimit, Target.GetCancellationTokenOnDestroy());
+            }), this);
         }
     }
 }
