@@ -63,6 +63,7 @@ namespace GeoTile
 
         private void Start()
         {
+            CreateModelLoadScheduler();
             StartCoroutine(LoopCollectCopyright());
         }
 
@@ -80,11 +81,13 @@ namespace GeoTile
 
         /// <summary>
         /// 全体的にGLTFをロードする
+        /// ただし、このメソッドは ModelLoadScheduler にタスクを登録して終了する。
+        /// あとは ModelLoadScheduler が実際のロード処理を行う。
         /// </summary>
         /// <param name="maxLevels"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public async UniTask  Load3DModels(int maxLevels, CancellationToken token)
+        public async UniTask Load3DModels(int maxLevels, CancellationToken token)
         {
             await Load3DModelsRecursive(transform, maxLevels, token);
         }
@@ -104,6 +107,25 @@ namespace GeoTile
             foreach (Transform child in trans)
             {
                 await Load3DModelsRecursive(child, maxLevels - 1, token);
+            }
+        }
+
+        /// <summary>
+        /// ModelLoadScheduler用タスク
+        /// </summary>
+        public class ModelLoadTask : ModelLoadScheduler.Task
+        {
+            TileSetNodeComponent node;
+
+            public ModelLoadTask(TileSetNodeComponent node)
+            {
+                this.node = node;
+            }
+
+            public async UniTask<(bool result, object artifact)> Do(CancellationToken token)
+            {
+                var result = await node.LoadModel(token);
+                return (result, null);
             }
         }
 
@@ -135,8 +157,11 @@ namespace GeoTile
                 return;
             }
 
-            await node.LoadModel(token);
-            await UniTask.Delay(20, cancellationToken: token);
+            // ModelLoadScheduler にタスクを登録して終了！
+
+            // ユーザーがみている場所に近いタイルのpriorityをあげたりしたい。
+            float priority = 0;
+            ModelLoadScheduler.Instance.AddTask(node.name, token, priority, new ModelLoadTask(node));
         }
 
         /// <summary>
@@ -240,6 +265,14 @@ namespace GeoTile
             if (changed)
             {
                 OnCopyrightAttributionTextChanged?.Invoke(CopyrightAttributionText);
+            }
+        }
+
+        private void CreateModelLoadScheduler()
+        {
+            if (ModelLoadScheduler.Instance == null)
+            {
+                ModelLoadScheduler.CreateGameObject();
             }
         }
     }

@@ -48,8 +48,19 @@ namespace GeoTile.Samples
         void Update()
         {
             loadHierarchyButton.interactable = !isBusy;
-            load3DModelButton.interactable = !isBusy;
-            stopButton.interactable = isBusy;
+
+            // ModelLoadScheduler が動いている間はロード中と考える。
+            load3DModelButton.interactable = !isBusy && !IsLoadTasksRemain();
+            stopButton.interactable = isBusy || IsLoadTasksRemain();
+        }
+
+        bool IsLoadTasksRemain()
+        {
+            if (!ModelLoadScheduler.Instance)
+            {
+                return false;
+            }
+            return ModelLoadScheduler.Instance.RemainingTasksCount > 0;
         }
 
         /// <summary>
@@ -64,6 +75,7 @@ namespace GeoTile.Samples
             {
                 try
                 {
+                    ModelLoadScheduler.Instance?.StopAllTasks();
                     cts = new CancellationTokenSource();
                     isBusy = true;
                     messageText.text = "Loading Hierarchy...";
@@ -140,7 +152,7 @@ namespace GeoTile.Samples
             cts?.Cancel();
             cts?.Dispose();
             cts = null;
+            ModelLoadScheduler.Instance?.StopAllTasks();
         }
-
     }
 }
