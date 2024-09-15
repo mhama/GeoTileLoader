@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -122,36 +123,40 @@ namespace GeoTile
 
         /// <summary>
         /// 複数段GLTFモデル生成メソッド
+        /// ※注意 タイルの詳細度などを気にせずすべてロードするので、適切な表示を行うためのメソッドではないので注意すること。
         /// 主にこのコンポーネントのインスペクタから利用する。
         /// </summary>
-        /// <param name="depth"></param>
+        /// <param name="depth">現在のデプス。最初は0で呼ぶこと。</param>
         /// <param name="depthLimit"></param>
         /// <returns></returns>
-        public IEnumerator LoadModelRecursive(int depth, int depthLimit)
+        public async UniTask<bool> LoadModelRecursive(int depth, int depthLimit, CancellationToken token)
         {
             if (depth >= depthLimit)
             {
                 Debug.Log($"depth limit exceeded. GameObject: {transform.gameObject.name}");
-                yield break;
+                return false;
             }
             Debug.Log($"LoadModelRecursive GameObject: {transform.gameObject.name} depth: {depth} depthLimit: {depthLimit}");
-            if (TileSetNode == null || TileSetNode.content == null)
+            if (TileSetNode != null && TileSetNode.content != null)
             {
-                Debug.LogWarning($"TileSet or content is null for GameObject: {transform.gameObject.name}");
-                yield break;
-            }
-            if (Path.GetExtension(TileSetNode.content.contentUrlFileName) != ".json")
-            {
-                yield return LoadModelIfNotLoaded();
+                if (Path.GetExtension(TileSetNode.content.contentUrlFileName) != ".json")
+                {
+                    await LoadModelIfNotLoaded(token);
+                }
             }
             foreach (Transform child in transform)
             {
                 var tileSetNode = child.GetComponent<TileSetNodeComponent>();
                 if (tileSetNode)
                 {
-                    yield return tileSetNode.LoadModelRecursive(depth + 1, depthLimit);
+                    var result = await tileSetNode.LoadModelRecursive(depth + 1, depthLimit, token);
+                    if (!result)
+                    {
+                        return false;
+                    }
                 }
             }
+            return true;
         }
 
         public bool IsModelLoaded()
@@ -159,13 +164,13 @@ namespace GeoTile
             return transform.Find("GLTF") != null;
         }
 
-        IEnumerator LoadModelIfNotLoaded()
+        async UniTask<bool> LoadModelIfNotLoaded(CancellationToken token)
         {
             if (IsModelLoaded())
             {
-                yield break;
+                return false;
             }
-            yield return LoadModel();
+            return await LoadModel(token);
         }
 
         /// <summary>
@@ -173,7 +178,7 @@ namespace GeoTile
         /// 直接GLBファイルを読める場合と、B3DM形式で包まれている場合がある
         /// </summary>
         /// <returns></returns>
-        public IEnumerator LoadModel()
+        public async UniTask<bool> LoadModel(CancellationToken token)
         {
             string session = null;
             var queries = (new Uri(BaseJsonUrl)).Query.Replace("?","").Split('&').Select(s => s.Split('='));
@@ -187,7 +192,7 @@ namespace GeoTile
             if (string.IsNullOrEmpty(modelRelativeUrl))
             {
                 Debug.LogError("model relative url is null");
-                yield break;
+                return false;
             }
             if (!string.IsNullOrEmpty(TileSetInfoProvider.LoaderConfig?.GoogleMapTileApiKey))
             {
@@ -197,34 +202,71 @@ namespace GeoTile
             var ModelAbsoluteUri = modelUri.AbsoluteUri;
 
             var ext = Path.GetExtension(modelUri.PathAndQuery.Split('?')[0]);
+
+            ModelData modelData = null;
             if (ext?.ToLower() == ".glb")
             {
-                yield return LoadGLB(ModelAbsoluteUri, OnGLTFReceived);
-                yield break;
+                // glbをロード
+                modelData = await LoadGLB(ModelAbsoluteUri, token);
+                if (modelData == null)
+                {
+                    return false;
+                }
             }
-
-            yield return LoadB3DM(ModelAbsoluteUri, OnGLTFReceived);
+            else
+            {
+                // b3dmファイルをロード
+                // b3dmはメタデータとglbを合わせたようなフォーマット
+                byte[] result = await LoadB3DM(ModelAbsoluteUri, token);
+                if (result == null)
+                {
+                    return false;
+                }
+                modelData = OnB3DMResult(result);
+                if (modelData == null)
+                {
+                    return false;
+                }
+            }
+            await InstatiateGltf(modelData.Data, modelData.CenterPosition);
+            return true;
         }
 
-        IEnumerator LoadGLB(string url, Action<byte[], double[]> onGLTFReceived)
+        class ModelData
+        {
+            /// <summary>
+            /// バイナリデータ
+            /// </summary>
+            public byte[] Data { get; set; }
+
+            /// <summary>
+            /// 中心座標 (3要素)
+            /// </summary>
+            public double[] CenterPosition { get; set; }
+        }
+
+        async UniTask<ModelData> LoadGLB(string url, CancellationToken token)
         {
             Debug.Log("loading GLB: " + url);
             using (var req = new UnityWebRequest(url))
             using (var buf = new DownloadHandlerBuffer())
             {
                 req.downloadHandler = buf;
-                yield return req.SendWebRequest();
+                await req.SendWebRequest().ToUniTask(cancellationToken: token);
                 if (req.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogError("load error: " + req.error);
-                    yield break;
+                    return null;
                 }
-                double[] center = {0,0,0};
-                onGLTFReceived(buf.data, center);
+                return new ModelData()
+                {
+                    Data = buf.data,
+                    CenterPosition = new double[]{0,0,0},
+                };
             }
         }
 
-        IEnumerator LoadB3DM(string url, Action<byte[], double[]> onGLTFReceived)
+        async UniTask<byte[]> LoadB3DM(string url, CancellationToken token)
         {
             if (!string.IsNullOrEmpty(TileSetInfoProvider.LoaderConfig?.GoogleMapTileApiKey))
             {
@@ -235,24 +277,24 @@ namespace GeoTile
             using (var buf = new DownloadHandlerBuffer())
             {
                 req.downloadHandler = buf;
-                yield return req.SendWebRequest();
+                await req.SendWebRequest().ToUniTask(cancellationToken: token);
                 if (req.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogError("load error: " + req.error);
-                    yield break;
+                    return null;
                 }
                 Debug.Log("loading success.");
-                OnB3DMResult(buf.data, onGLTFReceived);
+                return buf.data;
             }
         }
 
-        void OnB3DMResult(byte[] data, Action<byte[], double[]> onGLTFReceived)
+        ModelData OnB3DMResult(byte[] data)
         {
             var b3dm = new B3DM();
             if (!b3dm.Read(data))
             {
                 Debug.LogError("B3DM読み取りエラー");
-                return;
+                return null;
             }
 
             /* debug output
@@ -285,29 +327,31 @@ namespace GeoTile
                 Debug.Log("metadata extensions.CESIUM_RTC.center: " + string.Join(", ", metadata.extensions?.CESIUM_RTC.center));
                 center = CoordinateUtil.TileCoordToUnity(metadata.extensions.CESIUM_RTC.center);
             }
-            onGLTFReceived(b3dm.GltfData.ToArray(), center);
+            return new ModelData()
+            {
+                Data = b3dm.GltfData.ToArray(),
+                CenterPosition = center,
+            };
         }
 
-        void OnGLTFReceived(byte[] gltfData, double[] center)
+        async UniTask<bool> InstatiateGltf(byte[] gltfData, double[] center)
         {
             var component = this;
             this.gltfCenter = center;
 
             PrepareGltfInstantiator();
-            UniTask.Void(async () =>
+            if (component == null)
             {
-                if (component == null)
-                {
-                    return;
-                }
-                var (result, metadata) = await gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy());
+                return false;
+            }
+            var (result, metadata) = await gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy());
 
-                // Copyrightを格納する
-                if (!string.IsNullOrEmpty(metadata?.Copyright))
-                {
-                    Copyright = metadata.Copyright.Split(";").ToList();
-                }
-            });
+            // Copyrightを格納する
+            if (!string.IsNullOrEmpty(metadata?.Copyright))
+            {
+                Copyright = metadata.Copyright.Split(";").ToList();
+            }
+            return result;
         }
 
         /// <summary>
