@@ -72,7 +72,7 @@ namespace GeoTile
                 var go = new GameObject("Hierarchy: " + config.TileSetName);
                 if (config.RootParent != null)
                 {
-                    go.transform.SetParent(config.RootParent);
+                    go.transform.SetParent(config.RootParent, false);
                 }
                 hierarchy = go.AddComponent<TileSetHierarchy>();
                 hierarchy.TileSetName = config.TileSetName;
