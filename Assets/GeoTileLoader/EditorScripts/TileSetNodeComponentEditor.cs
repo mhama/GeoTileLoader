@@ -26,7 +26,7 @@ namespace GeoTile
         {
             var contentUrl = Target.TileSetNode?.content?.Url;
             var contentFound = !string.IsNullOrEmpty(contentUrl);
-            var alreadyLoaded = Target.transform.Find("GLTF") != null;
+            var alreadyLoaded = Target.transform.Find(IGltfInstantiator.GltfGameObjectName) != null;
             var contentExtension = Target.GetContentExtension();
             var jsonFound = contentExtension != null && contentExtension.EndsWith(".json");
 

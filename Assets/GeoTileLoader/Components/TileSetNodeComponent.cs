@@ -161,7 +161,7 @@ namespace GeoTile
 
         public bool IsModelLoaded()
         {
-            return transform.Find("GLTF") != null;
+            return transform.Find(IGltfInstantiator.GltfGameObjectName) != null;
         }
 
         async UniTask<bool> LoadModelIfNotLoaded(CancellationToken token)
@@ -228,7 +228,7 @@ namespace GeoTile
                     return false;
                 }
             }
-            await InstatiateGltf(modelData.Data, modelData.CenterPosition);
+            await InstatiateGltf(modelData.Data, modelData.CenterPosition, token);
             return true;
         }
 
@@ -334,7 +334,7 @@ namespace GeoTile
             };
         }
 
-        async UniTask<bool> InstatiateGltf(byte[] gltfData, double[] center)
+        async UniTask<bool> InstatiateGltf(byte[] gltfData, double[] center, CancellationToken token)
         {
             var component = this;
             this.gltfCenter = center;
@@ -344,7 +344,7 @@ namespace GeoTile
             {
                 return false;
             }
-            var (result, metadata) = await gltfInstantiator.Instantiate(gltfData, center, this, this.GetCancellationTokenOnDestroy());
+            var (result, metadata) = await gltfInstantiator.Instantiate(gltfData, center, this, token);
 
             // Copyrightを格納する
             if (!string.IsNullOrEmpty(metadata?.Copyright))

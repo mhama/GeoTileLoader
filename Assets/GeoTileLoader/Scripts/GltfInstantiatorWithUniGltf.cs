@@ -95,7 +95,7 @@ namespace GeoTile
             //File.WriteAllBytes(filePath, data);
             //Debug.Log($"GLTF written to <{filePath}>");
 
-            var gltfData = new GlbBinaryParser(data, "GLTF").Parse();
+            var gltfData = new GlbBinaryParser(data, IGltfInstantiator.GltfGameObjectName).Parse();
             using var loader = new UniGLTF.ImporterContext(gltfData);
             var instance = await loader.LoadAsync(new ImmediateCaller());
             instance.EnableUpdateWhenOffscreen();

@@ -19,6 +19,7 @@ namespace GeoTile
     /// </summary>
     public interface IGltfInstantiator
     {
+        static readonly string GltfGameObjectName = "__GLTF__";
         UniTask<(bool, TileMeshMetadata)> Instantiate(byte[] gltfData, double[] center, TileSetNodeComponent component, CancellationToken token);
     }
 
