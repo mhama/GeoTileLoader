@@ -2,7 +2,7 @@
 
 <br />
 
-<strong>Github: https://github.com/mhama/GeoTileLoader</strong>
+<strong>Github: [https://github.com/mhama/GeoTileLoader](https://github.com/mhama/GeoTileLoader)</strong>
 
 # About GeoTileLoader
 
@@ -19,7 +19,7 @@ This library is tested mainly with [Google Photorealistic 3D Tiles](https://deve
 
 # Demo
 
-https://geotileloader-sample2024.netlify.app/
+[https://geotileloader-sample2024.netlify.app/](https://geotileloader-sample2024.netlify.app/)
 
 APIの呼び出し制限があるため、3Dマップが読み込めない場合は時間をおいてお試しください。
 
