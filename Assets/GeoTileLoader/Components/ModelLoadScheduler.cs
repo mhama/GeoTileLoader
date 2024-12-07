@@ -39,7 +39,10 @@ public class ModelLoadScheduler : MonoBehaviour
         // priorityの高い順に実行される。後から変更も可能。
         // 現時点で実行順の調整処理は未実装 (2024/9/16)
         public float Priority { get; set; }
-        public CancellationToken CancellationToken { get; }
+        
+        private CancellationToken sourceCancellationToken;
+
+        public CancellationToken CancellationToken { get; private set; }
 
         // ModelLoadSchedulerからもキャンセルしたいので、元のCancellationTokenとリンクしたCancellationTokenSourceを作成して保持する。
         public CancellationTokenSource LinkedCancellationTokenSource { get; private set; }
@@ -52,9 +55,9 @@ public class ModelLoadScheduler : MonoBehaviour
         public TaskCarrier(string name, CancellationToken token, Task task)
         {
             Name = name;
-            CancellationToken = token;
             State = TaskState.Waiting;
             Task = task;
+            sourceCancellationToken = token;
         }
 
         public void MakeLinkedCancellationTokenSource()
@@ -64,7 +67,8 @@ public class ModelLoadScheduler : MonoBehaviour
                 Debug.LogError("LinkedCancellationTokenSource already initialized.");
                 return;
             }
-            LinkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            LinkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(sourceCancellationToken);
+            CancellationToken = LinkedCancellationTokenSource.Token;
         }
 
         public void CancelTask()

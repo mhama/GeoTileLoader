@@ -101,26 +101,49 @@ namespace GeoTile
             var gltf = new GltfImport(logger: new UnityLogger());
             try
             {
+                // GLTFのバイナリ読み込み
                 bool success = await gltf.LoadGltfBinary(data, baseUri, cancellationToken: token);
+                // 2024/12/8時点で、GltfImport.LoadGltfBinary() では、
+                // CancellationTokenが機能していないのでここでキャンセルをチェック
+                token.ThrowIfCancellationRequested();
                 if (!success)
                 {
                     Debug.LogError("load gltf failed.");
                     return (null, null);
                 }
             }
-            catch (Exception e)
+            catch (OperationCanceledException e)
             {
+                gltf.Dispose();
+                Debug.LogWarning("GLTF Load Cancelled.");
+                throw;
+            }
+            catch (Exception e) when (!(e is OperationCanceledException))
+            {
+                gltf.Dispose();
                 Debug.LogError("load gltf error. " + e);
                 return (null, null);
             }
 
             var copyright = gltf.GetSourceRoot().asset.copyright;
-
-            var go = new GameObject("GLTF");
+            
+            var go = new GameObject(IGltfInstantiator.GltfGameObjectName);
             go.transform.SetParent(parent, false);
-            {
+            try {
+                // GLTFのインスタンス化
                 bool success = await gltf.InstantiateMainSceneAsync(go.transform, cancellationToken: token);
+                // 2024/12/8時点で、GltfImport.InstantiateMainSceneAsync() では、
+                // CancellationTokenが機能していないのでここでキャンセルをチェック
+                token.ThrowIfCancellationRequested();
                 Debug.Log("load gltf result: " + success);
+            }
+            catch(OperationCanceledException _)
+            {
+                gltf.Dispose();
+                Debug.LogWarning("GLTF Instantiate  Cancelled.");
+                // キャンセル時、作成したGameObjectを消す
+                UnityEngine.Object.Destroy(go);
+                throw;
             }
 
             return (go, copyright);
