@@ -1,0 +1,25 @@
+{
+  "name": "com.mhama.geotileloader",
+  "version": "0.1.0",
+  "displayName": "GeoTileLoader",
+  "description": "A library to load 3D tiles",
+  "documentationUrl": "https://mhama.github.io/GeoTileLoader/",
+  "changelogUrl": "https://github.com/mhama/GeoTileLoader",
+  "licensesUrl": "https://github.com/mhama/GeoTileLoader/blob/main/LICENSE",
+  "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.5",
+    "com.unity.cloud.draco": "5.1.4",
+    "com.unity.cloud.gltfast": "6.7.0",
+    "com.unity.editorcoroutines": "1.0.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+ },
+ "keywords": [
+    "map",
+    "3d-tiles",
+    "geometry"
+  ],
+  "author": {
+    "name": "Makoto Hamanaka",
+    "email": "ham.lua@gmail.com"
+  }
+}
