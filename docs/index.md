@@ -1,5 +1,9 @@
 <img src="https://github.com/user-attachments/assets/c7fdb2ef-5fb7-4c0f-a3e7-7c93fa1eb396" width="500px">
 
+<br />
+
+<strong>Github: https://github.com/mhama/GeoTileLoader</strong>
+
 # About GeoTileLoader
 
 Unity3D向けの、[Cesium 3D Tiles](https://cesium.com/why-cesium/3d-tiles/) 形式のデータをロード・表示するライブラリです。[Cesium for Unity](https://cesium.com/learn/unity/) と異なり、C#とglTFastパッケージを利用して作成されており、Webブラウザ向け(WebGLビルド)でも利用できます。
@@ -16,6 +20,10 @@ This library is tested mainly with [Google Photorealistic 3D Tiles](https://deve
 # Demo
 
 https://geotileloader-sample2024.netlify.app/
+
+APIの呼び出し制限があるため、3Dマップが読み込めない場合は時間をおいてお試しください。
+
+As there's rate limit to the api, please try again later if you encounter troubles to load 3d map. 
 
 # Requirements
 
