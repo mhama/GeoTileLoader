@@ -19,6 +19,25 @@ Google Photorealistic 3D Tilesを利用する場合
 * 課金が有効なGoogle Cloud アカウント
 * Google API Consoleにて、Map Tiles APIが有効な状態で発行された Google APIのキー
 
+# How to install
+
+* Install UniTask
+
+  * On Package Manager window, click '+' icon on upper-left corner
+  * click `Add package from git URL...`.
+  * Then, input this URL and click `Add`.
+
+  ```
+  https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.5
+  ```
+
+* Install GeoTileLoader
+
+  * Using the same way as above, input this URL and click `Add`.
+  ```
+  https://github.com/mhama/GeoTileLoader.git?path=Assets/GeoTileLoader
+  ```
+
 # How to use (case of Google Photorealistic 3D Tiles)
 
 ## Preparing API key
