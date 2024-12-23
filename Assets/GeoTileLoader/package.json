@@ -1,6 +1,6 @@
 {
   "name": "com.mhama.geotileloader",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "displayName": "GeoTileLoader",
   "description": "A library to load 3D tiles",
   "documentationUrl": "https://mhama.github.io/GeoTileLoader/",
