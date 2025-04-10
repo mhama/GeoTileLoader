@@ -15,16 +15,40 @@ namespace GeoTile
     public class TileSetManager : MonoBehaviour
     {
         [SerializeField]
-        public string tileSetJsonUrl;
+        private string tileSetJsonUrl;
+
+        public string TileSetJsonUrl
+        {
+            get => tileSetJsonUrl;
+            set => tileSetJsonUrl = value;
+        }
         
         [SerializeField]
-        public string tileSetTitle = "";
+        private string tileSetTitle = "";
 
+        public string TileSetTitle
+        {
+            get => tileSetTitle;
+            set => tileSetTitle = value;
+        }
+        
         [SerializeField]
         private GeoTileLoaderSettings settings;
 
+        public GeoTileLoaderSettings Settings
+        {
+            get => settings;
+            set => settings = value;
+        }
+        
         [SerializeField]
-        public Transform parent;
+        private Transform parent;
+
+        public Transform Parent
+        {
+            get => parent;
+            set => parent = value;
+        }
 
         public CullingInfo cullingInfo = new CullingInfo()
         {
