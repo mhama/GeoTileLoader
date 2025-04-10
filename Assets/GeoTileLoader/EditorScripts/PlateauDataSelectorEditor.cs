@@ -114,8 +114,8 @@ namespace GeoTile.Editor
                         Debug.Log("Target.SelectedDataIndex:" + Target.SelectedDataIndex + " regionTileSetItems.Count: " + regionTileSetItems.Count);
                         var tileSetItem = regionTileSetItems[Target.SelectedDataIndex];
                         Undo.RecordObject(Target.tileSetManager, "field change");
-                        Target.tileSetManager.tileSetJsonUrl = tileSetItem.TileSetUrl;
-                        Target.tileSetManager.tileSetTitle = tileSetItem.Region + ":" + tileSetItem.DataName;
+                        Target.tileSetManager.TileSetJsonUrl = tileSetItem.TileSetUrl;
+                        Target.tileSetManager.TileSetTitle = tileSetItem.Region + ":" + tileSetItem.DataName;
                         EditorUtility.SetDirty(Target.tileSetManager);
                     }
                 }
