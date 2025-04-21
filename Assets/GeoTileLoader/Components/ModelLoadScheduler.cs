@@ -188,7 +188,7 @@ public class ModelLoadScheduler : MonoBehaviour
                     carrier.Exception = new Exception("the task returned failure.");
                 }
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 carrier.State = TaskState.Cancelled;
             }

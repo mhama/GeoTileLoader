@@ -112,7 +112,7 @@ namespace GeoTile
                     return (null, null);
                 }
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 gltf.Dispose();
                 Debug.LogWarning("GLTF Load Cancelled.");
@@ -137,7 +137,7 @@ namespace GeoTile
                 token.ThrowIfCancellationRequested();
                 Debug.Log("load gltf result: " + success);
             }
-            catch(OperationCanceledException _)
+            catch(OperationCanceledException)
             {
                 gltf.Dispose();
                 Debug.LogWarning("GLTF Instantiate  Cancelled.");
