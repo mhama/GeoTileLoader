@@ -101,7 +101,7 @@ namespace GeoTile
             var node = trans.GetComponent<TileSetNodeComponent>();
             if (node != null)
             {
-                await Load3DModelForNode(node, token);
+                AddLoad3DModelTaskForNode(node, token);
             }
 
             foreach (Transform child in trans)
@@ -129,7 +129,7 @@ namespace GeoTile
             }
         }
 
-        private async UniTask Load3DModelForNode(TileSetNodeComponent node, CancellationToken token)
+        private void AddLoad3DModelTaskForNode(TileSetNodeComponent node, CancellationToken token)
         {
             if (node.GetContentExtension() != ".b3dm" && node.GetContentExtension() != ".glb")
             {

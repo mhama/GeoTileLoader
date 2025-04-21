@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace GeoTile
 {
@@ -41,13 +42,13 @@ namespace GeoTile
             set => settings = value;
         }
         
-        [SerializeField]
-        private Transform parent;
+        [FormerlySerializedAs("parent")] [SerializeField]
+        private Transform tileSetParent;
 
-        public Transform Parent
+        public Transform TileSetParent
         {
-            get => parent;
-            set => parent = value;
+            get => tileSetParent;
+            set => tileSetParent = value;
         }
 
         public CullingInfo cullingInfo = new CullingInfo()
@@ -92,7 +93,7 @@ namespace GeoTile
                 TileSetName = tileSetTitle,
                 TileSetJsonUrl = tileSetJsonUrl,
                 GoogleMapTileApiKey = settings?.GoogleApiKeyFor3dMapTiles,
-                RootParent = parent,
+                RootParent = tileSetParent,
                 CullingInfo = cullingInfo,
             });
             return await loader.ReadJson(null, parentTrans, cullingInfo.cullCollider, token);
