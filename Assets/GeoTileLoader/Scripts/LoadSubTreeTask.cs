@@ -14,21 +14,19 @@ namespace GeoTile
         private readonly TileSetHierarchy hierarchy;
         private readonly Transform trans;
         private readonly int maxLevels;
-        private readonly int maxNodes;
 
-        public LoadSubTreeTask(TileSetHierarchy hierarchy, Transform trans, int maxLevels, int maxNodes)
+        public LoadSubTreeTask(TileSetHierarchy hierarchy, Transform trans, int maxLevels)
         {
             this.hierarchy = hierarchy;
             this.trans = trans;
             this.maxLevels = maxLevels;
-            this.maxNodes = maxNodes;
         }
 
         public async UniTask<(bool result, object artifact)> Do(CancellationToken token)
         {
             try
             {
-                await LoadSubTreesRecursiveLogic(trans, maxLevels, maxNodes, token);
+                await LoadSubTreesRecursiveLogic(trans, maxLevels, token);
                 return (true, null);
             }
             catch (Exception e)
@@ -38,13 +36,14 @@ namespace GeoTile
             }
         }
 
-        private async UniTask<int> LoadSubTreesRecursiveLogic(Transform trans, int maxLevels, int maxNodes, CancellationToken token)
+        private async UniTask LoadSubTreesRecursiveLogic(Transform trans, int maxLevels, CancellationToken token)
         {
-            maxNodes--;
-            if (maxNodes <= 0)
+            // 集中管理されたノードカウンターをチェック
+            var nodeCount = hierarchy.IncrementNodeCount();
+            if (nodeCount == -1)
             {
-                Debug.LogWarning("maxNodes reached.");
-                return maxNodes;
+                Debug.LogWarning($"MaxNodeCount ({hierarchy.MaxNodeCount}) reached. Current: {hierarchy.CurrentNodeCount}");
+                return; // 制限に達したので処理を停止
             }
 
             // サブツリーが存在して、既にロードされていなければロードする
@@ -94,7 +93,7 @@ namespace GeoTile
                 var childNode = child.GetComponent<TileSetNodeComponent>();
                 if (childNode != null && childNode.gameObject.activeInHierarchy)
                 {
-                    if (maxLevels > 1 && maxNodes > 0)
+                    if (maxLevels > 1)
                     {
                         float priority = 0;
                         JsonLoadScheduler.Instance.AddLoadSubTreeTask(
@@ -102,20 +101,12 @@ namespace GeoTile
                             hierarchy,
                             child,
                             maxLevels - 1,
-                            maxNodes,
                             token,
                             priority
                         );
-                        maxNodes--;
-                        if (maxNodes <= 0)
-                        {
-                            break;
-                        }
                     }
                 }
             }
-
-            return maxNodes;
         }
     }
 }

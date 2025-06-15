@@ -91,7 +91,6 @@ namespace GeoTile
         /// <param name="hierarchy">TileSetHierarchy instance</param>
         /// <param name="trans">Transform to process</param>
         /// <param name="maxLevels">Maximum levels to process</param>
-        /// <param name="maxNodes">Maximum nodes to process</param>
         /// <param name="token">Cancellation token</param>
         /// <param name="priority">Task priority (higher values executed first)</param>
         /// <returns>Task carrier for tracking progress</returns>
@@ -100,11 +99,10 @@ namespace GeoTile
             TileSetHierarchy hierarchy,
             Transform trans,
             int maxLevels,
-            int maxNodes,
             CancellationToken token,
             float priority = 0)
         {
-            var task = new LoadSubTreeTask(hierarchy, trans, maxLevels, maxNodes);
+            var task = new LoadSubTreeTask(hierarchy, trans, maxLevels);
             return taskScheduler.AddTask(name, token, priority, task);
         }
 

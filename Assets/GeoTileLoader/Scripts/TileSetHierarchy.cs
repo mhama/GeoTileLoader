@@ -50,6 +50,42 @@ namespace GeoTile
         public TileSetHierarchyLoaderConfig LoaderConfig { get; set; }
 
         /// <summary>
+        /// ノード数制限とカウンター情報
+        /// </summary>
+        public int MaxNodeCount { get; private set; } = 10000; // デフォルト値
+        public int CurrentNodeCount { get; private set; } = 0;
+
+        /// <summary>
+        /// MaxNodeCountを設定
+        /// </summary>
+        public void SetMaxNodeCount(int maxNodes)
+        {
+            MaxNodeCount = maxNodes;
+        }
+
+        /// <summary>
+        /// ノードカウントを増加させる
+        /// </summary>
+        /// <returns>増加後のカウント。maxNodesを超えた場合は-1を返す</returns>
+        public int IncrementNodeCount()
+        {
+            if (CurrentNodeCount >= MaxNodeCount)
+            {
+                return -1; // 制限に達している
+            }
+            CurrentNodeCount++;
+            return CurrentNodeCount;
+        }
+
+        /// <summary>
+        /// ノードカウントをリセット
+        /// </summary>
+        public void ResetNodeCount()
+        {
+            CurrentNodeCount = 0;
+        }
+
+        /// <summary>
         /// 著作権表示文字列
         /// </summary>
         public string CopyrightAttributionText { get; private set; }
@@ -172,13 +208,16 @@ namespace GeoTile
         /// <returns></returns>
         public async UniTask LoadSubTrees(int maxLevels, int maxNodes, CancellationToken token)
         {
+            // ノードカウンターをリセットしてmaxNodesを設定
+            ResetNodeCount();
+            SetMaxNodeCount(maxNodes);
+            
             // 最初のタスクを追加
             JsonLoadScheduler.Instance.AddLoadSubTreeTask(
                 "RootSubTree",
                 this,
                 transform,
                 maxLevels,
-                maxNodes,
                 token,
                 0
             );
