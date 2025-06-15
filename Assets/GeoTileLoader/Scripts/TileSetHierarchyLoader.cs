@@ -56,14 +56,15 @@ namespace GeoTile
 
         // Start is called before the first frame update
         /// <summary>
-        /// 3DTileSetのjsonをロードする
+        /// 3DTileSetのjsonをロードする(1つのjson内のサブツリーを読み込む)
+        /// カリングも行う
         /// </summary>
         /// <param name="rootHierarchy">サブツリー読み込み時は、タイルセット全体のルートにあるTileSetHierarchyをわたす。メインツリー読み込み時はnullを指定</param>
         /// <param name="parentTrans">サブツリーを読み込む場合の親Transform</param>
         /// <param name="onResult"></param>
         /// <param name="token"></param>
         /// <returns>生成されたルートGameObject (rootHierarchy == nullの場合), rootHierarchy != null の場合は parentTrans引数の値を返す。エラーの場合はnullを返す</returns>
-        public async UniTask<Transform> ReadJson(TileSetHierarchy rootHierarchy, Transform parentTrans, Collider cullCollider, CancellationToken token)
+        public async UniTask<Transform> ReadJsonAsync(TileSetHierarchy rootHierarchy, Transform parentTrans, Collider cullCollider, CancellationToken token)
         {
             Transform trans = null;
             TileSetHierarchy hierarchy = rootHierarchy;
@@ -111,7 +112,7 @@ namespace GeoTile
                 }
             }
 
-            await ReadJsonFromUrlCoroutine(trans, url, hierarchy, token);
+            await ReadJsonFromUrlAsync(trans, url, hierarchy, token);
             Debug.Log("ReadJsonFromUrlCoroutine finished!");
             List<Transform> children = trans
                            .Cast<Transform>()
@@ -136,7 +137,7 @@ namespace GeoTile
             return trans;
         }
 
-        async UniTask ReadJsonFromUrlCoroutine(Transform parent, string url, TileSetHierarchy hierarchy, CancellationToken token)
+        async UniTask ReadJsonFromUrlAsync(Transform parent, string url, TileSetHierarchy hierarchy, CancellationToken token)
         {
             Debug.Log("loading: " + url);
             using (var req = new UnityWebRequest(url))

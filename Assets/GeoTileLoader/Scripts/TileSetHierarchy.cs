@@ -223,7 +223,7 @@ namespace GeoTile
                     });
                     try
                     {
-                        await loader.ReadJson(this, node.transform, node.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, token);
+                        await loader.ReadJsonAsync(this, node.transform, node.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, token);
                         Debug.Log($"ReadJson at {trans.name} success.");
                     }
                     catch (Exception e)

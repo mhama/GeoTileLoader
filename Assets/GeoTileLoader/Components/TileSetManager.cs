@@ -96,7 +96,7 @@ namespace GeoTile
                 RootParent = tileSetParent,
                 CullingInfo = cullingInfo,
             });
-            return await loader.ReadJson(null, parentTrans, cullingInfo.cullCollider, token);
+            return await loader.ReadJsonAsync(null, parentTrans, cullingInfo.cullCollider, token);
         }
     }
 }
