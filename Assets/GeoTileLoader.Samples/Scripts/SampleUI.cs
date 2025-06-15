@@ -75,6 +75,7 @@ namespace GeoTile.Samples
             {
                 try
                 {
+                    JsonLoadScheduler.Instance?.StopAllTasks();
                     ModelLoadScheduler.Instance?.StopAllTasks();
                     cts = new CancellationTokenSource();
                     isBusy = true;
@@ -152,6 +153,7 @@ namespace GeoTile.Samples
             cts?.Cancel();
             cts?.Dispose();
             cts = null;
+            JsonLoadScheduler.Instance?.StopAllTasks();
             ModelLoadScheduler.Instance?.StopAllTasks();
         }
     }

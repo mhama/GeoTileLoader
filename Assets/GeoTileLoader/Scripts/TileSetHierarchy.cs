@@ -50,6 +50,42 @@ namespace GeoTile
         public TileSetHierarchyLoaderConfig LoaderConfig { get; set; }
 
         /// <summary>
+        /// ノード数制限とカウンター情報
+        /// </summary>
+        public int MaxNodeCount { get; private set; } = 10000; // デフォルト値
+        public int CurrentNodeCount { get; private set; } = 0;
+
+        /// <summary>
+        /// MaxNodeCountを設定
+        /// </summary>
+        public void SetMaxNodeCount(int maxNodes)
+        {
+            MaxNodeCount = maxNodes;
+        }
+
+        /// <summary>
+        /// ノードカウントを増加させる
+        /// </summary>
+        /// <returns>増加後のカウント。maxNodesを超えた場合は-1を返す</returns>
+        public int IncrementNodeCount()
+        {
+            if (CurrentNodeCount >= MaxNodeCount)
+            {
+                return -1; // 制限に達している
+            }
+            CurrentNodeCount++;
+            return CurrentNodeCount;
+        }
+
+        /// <summary>
+        /// ノードカウントをリセット
+        /// </summary>
+        public void ResetNodeCount()
+        {
+            CurrentNodeCount = 0;
+        }
+
+        /// <summary>
         /// 著作権表示文字列
         /// </summary>
         public string CopyrightAttributionText { get; private set; }
@@ -64,6 +100,7 @@ namespace GeoTile
         private void Start()
         {
             CreateModelLoadScheduler();
+            CreateJsonLoadScheduler();
             StartCoroutine(LoopCollectCopyright());
         }
 
@@ -113,7 +150,7 @@ namespace GeoTile
         /// <summary>
         /// ModelLoadScheduler用タスク
         /// </summary>
-        public class ModelLoadTask : ModelLoadScheduler.Task
+        public class ModelLoadTask : GeoTile.TaskScheduler.Task
         {
             TileSetNodeComponent node;
 
@@ -171,83 +208,24 @@ namespace GeoTile
         /// <returns></returns>
         public async UniTask LoadSubTrees(int maxLevels, int maxNodes, CancellationToken token)
         {
-            await LoadSubTreesRecursive(transform, maxLevels, maxNodes, token);
+            // ノードカウンターをリセットしてmaxNodesを設定
+            ResetNodeCount();
+            SetMaxNodeCount(maxNodes);
+            
+            // 最初のタスクを追加
+            JsonLoadScheduler.Instance.AddLoadSubTreeTask(
+                "RootSubTree",
+                this,
+                transform,
+                maxLevels,
+                token,
+                0
+            );
+
+            // すべてのタスクが完了するまで待つ
+            await UniTask.WaitWhile(() => JsonLoadScheduler.Instance.RemainingTasksCount > 0, cancellationToken: token);
         }
 
-        /// <summary>
-        /// 再帰的にサブツリーをロードする
-        /// return maxNodes
-        /// </summary>
-        /// <param name="trans"></param>
-        /// <param name="maxLevels"></param>
-        /// <param name="maxNodes"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        private async UniTask<int> LoadSubTreesRecursive(Transform trans, int maxLevels, int maxNodes, CancellationToken token)
-        {
-            maxNodes--;
-            if (maxNodes <= 0)
-            {
-                Debug.LogWarning("maxNodes reached.");
-                return maxNodes;
-            }
-
-            {
-                // サブツリーが存在して、既にロードされていなければロードする
-                var node = trans.GetComponent<TileSetNodeComponent>();
-                if (node != null
-                    && node.gameObject.activeInHierarchy
-                    && node.SubTreeExists()
-                    && !node.SubTreeAlreadyLoaded())
-                {
-                    var contentUrl = node.TileSetNode?.content?.Url;
-                    var newUri = new Uri(new Uri(node.BaseJsonUrl), contentUrl);
-                    var query = node.TileSetNode?.content?.contentUrlQuery;
-                    Debug.Log("content query:" + query);
-                    var sessionId = node.GoogleSessionId;
-                    var sessionKeyValue = query.Split("&").Select(v => v.Split("=")).Where(kv => kv[0] == "session")
-                        .ToList();
-                    if (sessionKeyValue.Count > 0)
-                    {
-                        sessionId = sessionKeyValue[0][1];
-                    }
-
-                    var loader = new TileSetHierarchyLoader(new TileSetHierarchyLoaderConfig()
-                    {
-                        TileSetJsonUrl = newUri.ToString(),
-                        TileSetName = "",
-                        GoogleSessionId = sessionId,
-                        GoogleMapTileApiKey = node.TileSetInfoProvider.LoaderConfig.GoogleMapTileApiKey,
-                        CullingInfo = node.CullingInfo,
-                        RootParent = node.TileSetInfoProvider.LoaderConfig.RootParent,
-                    });
-                    try
-                    {
-                        await loader.ReadJson(this, node.transform, node.TileSetInfoProvider.LoaderConfig.CullingInfo.cullCollider, token);
-                        Debug.Log($"ReadJson at {trans.name} success.");
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"ReadJson at {trans.name} failed. e: " + e);
-                    }
-                }
-            }
-
-            foreach (Transform child in trans)
-            {
-                var node = child.GetComponent<TileSetNodeComponent>();
-                if (node != null && node.gameObject.activeInHierarchy)
-                {
-                    maxNodes = await LoadSubTreesRecursive(child, maxLevels - 1, maxNodes, token);
-                    if (maxNodes <= 0)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            return maxNodes;
-        }
 
         /// <summary>
         /// ヒエラルキー内に存在するタイルの著作権表示を収集し、CopyrightAttributionText に保存する。
@@ -273,6 +251,14 @@ namespace GeoTile
             if (ModelLoadScheduler.Instance == null)
             {
                 ModelLoadScheduler.CreateGameObject();
+            }
+        }
+
+        private void CreateJsonLoadScheduler()
+        {
+            if (JsonLoadScheduler.Instance == null)
+            {
+                JsonLoadScheduler.CreateGameObject();
             }
         }
     }
