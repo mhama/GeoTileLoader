@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using System.Linq;
 
 namespace GeoTile
 {
@@ -35,7 +36,7 @@ namespace GeoTile
         {
             public string Name { get; }
             public float Priority { get; set; }
-            
+
             private CancellationToken sourceCancellationToken;
             public CancellationToken CancellationToken { get; private set; }
             public CancellationTokenSource LinkedCancellationTokenSource { get; private set; }
@@ -75,14 +76,31 @@ namespace GeoTile
                     ((IDisposable)LinkedCancellationTokenSource).Dispose();
                 }
             }
+            
+            public override string ToString()
+            {
+                var exceptionInfo = Exception != null ? $" Exception: {Exception.Message}" : "";
+                return $"Task[{Name}] State: {State}{exceptionInfo}";
+            }
         }
 
         private readonly List<TaskCarrier> waitingTasks = new List<TaskCarrier>();
         private readonly List<TaskCarrier> runningTasks = new List<TaskCarrier>();
+        private readonly List<TaskCarrier> failedTasks = new List<TaskCarrier>();
         private readonly int concurrencyLimit;
         private readonly string schedulerName;
 
         public int RemainingTasksCount => waitingTasks.Count + runningTasks.Count;
+
+        /// <summary>
+        /// Get running tasks information for debugging
+        /// </summary>
+        public string GetRunningTasksInfo()
+        {
+            string log = $"[JsonLoadScheduler] Running tasks count: {runningTasks.Count}";
+            log += string.Join("\n", runningTasks.Select(c => "  " + c.ToString()));
+            return log;
+        }
 
         public TaskScheduler(int concurrencyLimit = 8, string schedulerName = "TaskScheduler")
         {
@@ -157,6 +175,14 @@ namespace GeoTile
                 {
                     runningTasks.Remove(carrier);
                     Debug.Log($"{schedulerName}: ---- end task {carrier.Name} state: {carrier.State} concurrency: {runningTasks.Count}");
+                    if (carrier.State == TaskState.Failed)
+                    {
+                        failedTasks.Add(carrier);
+                    }
+                    else
+                    {
+                        carrier.Dispose();
+                    }
                 }
             });
         }
@@ -164,7 +190,7 @@ namespace GeoTile
         /// <summary>
         /// Stop all queued and running tasks
         /// </summary>
-        public void StopAllTasks()
+        public void StopAllTasks(bool clearFailedTasks = true)
         {
             waitingTasks.Clear();
             foreach (var carrier in runningTasks)
@@ -173,6 +199,20 @@ namespace GeoTile
                 carrier.Dispose();
             }
             runningTasks.Clear();
+
+            if (clearFailedTasks)
+            {
+                ClearFailedTasks();
+            }
+        }
+        
+        public void ClearFailedTasks()
+        {
+            foreach (var carrier in failedTasks)
+            {
+                carrier.Dispose();
+            }
+            failedTasks.Clear();
         }
     }
 }

@@ -144,6 +144,7 @@ namespace GeoTile
             using (var buf = new DownloadHandlerBuffer())
             {
                 req.downloadHandler = buf;
+                req.timeout = 10; // timeout seconds
                 await req.SendWebRequest().WithCancellation(token);
                 if (req.result != UnityWebRequest.Result.Success)
                 {

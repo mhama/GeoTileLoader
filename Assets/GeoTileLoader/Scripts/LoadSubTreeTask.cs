@@ -28,8 +28,8 @@ namespace GeoTile
         {
             try
             {
-                var remainingNodes = await LoadSubTreesRecursiveLogic(trans, maxLevels, maxNodes, token);
-                return (true, remainingNodes);
+                await LoadSubTreesRecursiveLogic(trans, maxLevels, maxNodes, token);
+                return (true, null);
             }
             catch (Exception e)
             {
@@ -84,6 +84,7 @@ namespace GeoTile
                 catch (Exception e)
                 {
                     Debug.LogError($"ReadJson at {trans.name} failed. e: " + e);
+                    throw;
                 }
             }
 

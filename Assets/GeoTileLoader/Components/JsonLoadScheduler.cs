@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Linq;
+using System.Collections;
 
 namespace GeoTile
 {
@@ -18,8 +19,8 @@ namespace GeoTile
 
         private TaskScheduler taskScheduler;
 
-        // Configure concurrency limit for JSON loading (lower than model loading to avoid overwhelming servers)
-        private const int JsonConcurrencyLimit = 10;
+        // Configure concurrency limit for JSON loading
+        private const int JsonConcurrencyLimit = 20;
 
         public int RemainingTasksCount => taskScheduler?.RemainingTasksCount ?? 0;
 
@@ -43,9 +44,35 @@ namespace GeoTile
             taskScheduler = new TaskScheduler(JsonConcurrencyLimit, "JsonLoadScheduler");
         }
 
+        private void Start()
+        {
+            // 5秒間隔でrunningTasksの状態をログ出力するコルーチンを開始
+            StartCoroutine(LogRunningTasksCoroutine());
+        }
+
         private void Update()
         {
             taskScheduler?.ProcessTasks();
+        }
+
+        /// <summary>
+        /// 10秒間隔でrunningTasksの状態をログ出力するコルーチン
+        /// </summary>
+        private IEnumerator LogRunningTasksCoroutine()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(10.0f);
+                if (taskScheduler == null)
+                {
+                    continue;
+                }
+                if (taskScheduler.RemainingTasksCount == 0)
+                {
+                    continue;
+                }
+                Debug.Log(taskScheduler.GetRunningTasksInfo());
+            }
         }
 
         private void OnDestroy()
