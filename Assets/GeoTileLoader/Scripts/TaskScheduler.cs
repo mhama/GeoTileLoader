@@ -110,12 +110,26 @@ namespace GeoTile
 
         /// <summary>
         /// Add a task to the execution queue
+        /// Tasks are inserted in priority order (highest priority first)
         /// </summary>
         public TaskCarrier AddTask(string name, CancellationToken token, float priority, Task task)
         {
             var carrier = new TaskCarrier(name, token, task);
             carrier.Priority = priority;
-            waitingTasks.Add(carrier);
+            
+            // 優先度順に挿入位置を決定（高い優先度が先頭に来るように）
+            int insertIndex = 0;
+            for (int i = 0; i < waitingTasks.Count; i++)
+            {
+                if (priority > waitingTasks[i].Priority)
+                {
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex = i + 1;
+            }
+            
+            waitingTasks.Insert(insertIndex, carrier);
             return carrier;
         }
 
