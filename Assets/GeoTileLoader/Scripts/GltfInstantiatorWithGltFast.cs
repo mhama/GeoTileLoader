@@ -26,6 +26,7 @@ namespace GeoTile
             {
                 if (center != null)
                 {
+                    // google 3D Tiles uses this course (2025/6/15)
                     pos = new Vector3(
                         (float)(center[0] + modelOffset.x),
                         (float)(center[1] + modelOffset.y),
@@ -34,6 +35,7 @@ namespace GeoTile
                 }
                 else
                 {
+                    // I don't know the correctness  (2025/6/15)
                     pos = new Vector3(
                         (float)(- component.GlobalBasePos[0] + modelOffset.x),
                         (float)(- component.GlobalBasePos[1] + modelOffset.y),

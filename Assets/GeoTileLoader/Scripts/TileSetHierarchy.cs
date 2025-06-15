@@ -196,9 +196,38 @@ namespace GeoTile
 
             // ModelLoadScheduler にタスクを登録して終了！
 
-            // ユーザーがみている場所に近いタイルのpriorityをあげたりしたい。
-            float priority = 0;
+            // 中心からの距離に基づいて優先度を計算
+            float priority = CalculateNodePriority(node);
             ModelLoadScheduler.Instance.AddTask(node.name, token, priority, new ModelLoadTask(node));
+        }
+
+        /// <summary>
+        /// ノードの優先度を計算する（中心からの距離に基づく）
+        /// 距離が近いほど高い優先度（大きな値）を返す
+        /// </summary>
+        /// <param name="node">対象ノード</param>
+        /// <returns>優先度（距離が近いほど大きな値）</returns>
+        private float CalculateNodePriority(TileSetNodeComponent node)
+        {
+            if (node.NodeBasePos == null || node.NodeBasePos.Length < 3)
+            {
+                return 0.0f; // NodeBasePosが無効な場合は最低優先度
+            }
+
+            // NodeBasePosをVectorD3に変換（ECEF座標）
+            var nodePosition = new VectorD3(node.NodeBasePos[0], node.NodeBasePos[1], node.NodeBasePos[2]);
+            
+            // 中心座標との距離を計算
+            var centerPosition = ModelCenterEcefCoordinate;
+            var distance = (nodePosition - centerPosition).magnitude;
+            
+            // 距離に基づく優先度を計算（近いほど高い優先度）
+            // 最大距離を100kmと仮定して正規化
+            const double maxDistance = 100000.0; // 100km in meters
+            var normalizedDistance = Math.Min(distance / maxDistance, 1.0);
+            
+            // 1.0から正規化距離を引いて、近いほど高い値になるようにする
+            return (float)(1.0 - normalizedDistance);
         }
 
         /// <summary>
