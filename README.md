@@ -1,83 +1,77 @@
 # About GeoTileLoader
 
-Unity3D向けの、[Cesium 3D Tiles](https://cesium.com/why-cesium/3d-tiles/) 形式のデータをロード・表示するライブラリです。[Cesium for Unity](https://cesium.com/learn/unity/) と異なり、C#とglTFastパッケージを利用して作成されており、WebGLビルドでも利用できます。
+Japanese README is available [here](README_JA.md).
 
-主に [Google Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles) と [PLATEAU Streaming](https://github.com/Project-PLATEAU/plateau-streaming-tutorial) のデータでテストされています。
+GeoTileLoader is a library for Unity3D that loads and displays data in the [Cesium 3D Tiles](https://cesium.com/why-cesium/3d-tiles/) format. Unlike [Cesium for Unity](https://cesium.com/learn/unity/), it is built with C# and the glTFast package so it can also be used in WebGL builds.
 
+It is mainly tested with data from [Google Photorealistic 3D Tiles](https://developers.google.com/maps/documentation/tile/3d-tiles) and [PLATEAU Streaming](https://github.com/Project-PLATEAU/plateau-streaming-tutorial).
 
-※ このライブラリは開発の初期段階のため、十分な利便性を提供しない可能性があります。
+*This library is in an early stage of development and may not provide full functionality.*
 
 <img src="https://github.com/user-attachments/assets/c7fdb2ef-5fb7-4c0f-a3e7-7c93fa1eb396" width="500px">
 
 # Requirements
 
-Unity 2022.3.x
-(Maybe Unity 2021 is also ok)
+* Unity 2022.3.x (Unity 2021 might also work)
 
-Google Photorealistic 3D Tilesを利用する場合
+When using Google Photorealistic 3D Tiles you also need:
 
-* 課金が有効なGoogle Cloud アカウント
-* Google API Consoleにて、Map Tiles APIが有効な状態で発行された Google APIのキー
+* A Google Cloud account with billing enabled
+* A Google API key issued with Map Tiles API enabled in the Google API Console
 
 # How to install
 
 * Install UniTask
-
-  * On Package Manager window, click '+' icon on upper-left corner
-  * click `Add package from git URL...`.
-  * Then, input this URL and click `Add`.
+  * On the Package Manager window click the `+` icon in the upper-left corner
+  * Choose **Add package from git URL...**
+  * Enter the URL below and click **Add**
 
   ```
   https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.5
   ```
 
 * Install GeoTileLoader
+  * In the same way as above, enter the following URL and click **Add**
 
-  * Using the same way as above, input this URL and click `Add`.
   ```
   https://github.com/mhama/GeoTileLoader.git?path=Assets/GeoTileLoader
   ```
 
-# How to use (case of Google Photorealistic 3D Tiles)
+# How to use (Google Photorealistic 3D Tiles)
 
-## Preparing API key
+## Preparing an API key
 
-以下のあたりのドキュメントを参照して、Google APIのAPIキーを用意してください。
+See the following documentation to obtain a Google API key:
 https://developers.google.com/maps/documentation/tile/cloud-setup
 
-Assets/GeoTileLoader/GeoTileLoaderSettingsForGoogle.asset のインスペクタで、`Google Api Key For 3D Map Tiles` 欄にGoogle APIキーを設定してください。
+Set the API key in the `Google Api Key For 3D Map Tiles` field of `Assets/GeoTileLoader/GeoTileLoaderSettingsForGoogle.asset`.
 
-## Use sample scene
+## Use the sample scene
 
-Assets/GeoTileLoader/Samples/Google3DMapTiles シーンを開いてください。
-PLAY後、`Load Hierarchy` ボタンを押すとデータ構造が読み込まれ、`Load 3D Models` ボタンを押すとモデルが表示されます。
+Open the `Assets/GeoTileLoader/Samples/Google3DMapTiles` scene. After pressing **Play**, click `Load Hierarchy` to load the tile hierarchy and then `Load 3D Models` to display the models.
 
-`Load Hierarchy` ボタンを押したときに `403 Forbidden` のような表示が出る場合は、APIキーに問題がある可能性があります。以下を確認してください。
-* Google Cloudの課金設定
-* Map Tiles APIの有効化
-* APIキーの発行
+If you see a `403 Forbidden` message when pressing `Load Hierarchy`, there may be a problem with your API key. Please check the following:
+* Billing settings in Google Cloud
+* Map Tiles API is enabled
+* The API key has been issued correctly
 
-# How to use (case of PLATEAU Streming)
+# How to use (PLATEAU Streaming)
 
-Assets/GeoTileLoader/Samples/PlateauStreamingSample シーンを開いてください。
-PLAY後、`Load Hierarchy` ボタンを押すとデータ構造が読み込まれ、`Load 3D Models` ボタンを押すとモデルが表示されます。
+Open the `Assets/GeoTileLoader/Samples/PlateauStreamingSample` scene. After pressing **Play**, click `Load Hierarchy` to load the structure and then `Load 3D Models` to display the models.
 
-## タイルセットを変更する場合
+## Changing the tileset
 
-`Tile Set Manager` GameObjectのインスペクターの `Plateau Data Selector` コンポーネントのUIからデータセットを選択することができます。Regionで都道府県を選択し、その後データセットを選択できます。データセットを選択すると、`Tile Set Manager` の `Tile Set Json Url` および `Tile Set Title` のフィールドに反映されます。
+From the `Plateau Data Selector` component in the `Tile Set Manager` GameObject inspector you can select a dataset. Select a prefecture in the Region field and then choose a dataset. When selected, the `Tile Set Json Url` and `Tile Set Title` fields of `Tile Set Manager` will be updated.
 
-データセットを選択した後、表示範囲を調整する必要があります。
+After selecting a dataset, you need to adjust the viewing area.
 
-表示したい範囲の中心の緯度・経度を、ブラウザ上のGoogle Mapを右クリックするなどして取得してください。デフォルトのままでは何も表示されない可能性があります。
-緯度、経度および、表示半径を `Tile Set Manager` の `Culling Info` にセットしてください。
-表示半径は、現状の実装では高さ方向も制約するため、表示半径は1000（メートル）やそれ以上を推奨します。
+Get the latitude and longitude of the center of the area you want to view from Google Maps or similar. Without adjustment, nothing may be shown. Set the latitude, longitude and display radius in the `Culling Info` section of `Tile Set Manager`. Because the current implementation also constrains the vertical range, a radius of 1000 meters or more is recommended.
 
-PLAY後、`Load Hierarchy` ボタンを押すとデータ構造が読み込まれ、`Load 3D Models` ボタンを押すとモデルが表示されます。
+After pressing **Play**, click `Load Hierarchy` to load the tile hierarchy and then `Load 3D Models` to display the models.
 
-## PLATEAUデータセットの注意点
+## Notes about PLATEAU datasets
 
-* 現時点では、テクスチャありのデータセットは利用できません。
-  * PLATEAU StreammingのGLTFファイルは、テクスチャの圧縮に `WebPエンコーディング` を利用していますが、本ライブラリで利用している `glTFast` パッケージがこれに対応していないためです。
-* 建築物以外のデータはうまく動作するかわかりません。
-* データセット一覧のjsonを同梱していますが、データセットに更新があった場合、リンクが切れる可能性があります。この場合は、PLATEAU StreamingのデータセットのURLを直接 `Tile Set Json Url` にセットするなどしてください。
-
+* Currently datasets that include textures cannot be used.
+  * PLATEAU Streaming uses `WebP encoding` for texture compression in its GLTF files, but the `glTFast` package used by this library does not support it.
+* Datasets other than building models may not work correctly.
+* A JSON list of datasets is bundled, but links may become invalid if the dataset is updated. If this happens, set the PLATEAU Streaming dataset URL directly in `Tile Set Json Url`.
