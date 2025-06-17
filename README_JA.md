@@ -58,7 +58,7 @@ PLAY後、`Load Hierarchy` ボタンを押すとデータ構造が読み込ま�
 * Map Tiles APIの有効化
 * APIキーの発行
 
-# How to use (case of PLATEAU Streming)
+# How to use (case of PLATEAU Streaming)
 
 Assets/GeoTileLoader/Samples/PlateauStreamingSample シーンを開いてください。
 PLAY後、`Load Hierarchy` ボタンを押すとデータ構造が読み込まれ、`Load 3D Models` ボタンを押すとモデルが表示されます。
