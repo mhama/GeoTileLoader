@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.5",
+    "com.github.kou-yeung": "https://github.com/kou-yeung/WebGLInput.git?path=Assets/WebGLSupport#1.4.4",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.cloud.draco": "5.1.4",
     "com.unity.cloud.gltfast": "6.7.0",
